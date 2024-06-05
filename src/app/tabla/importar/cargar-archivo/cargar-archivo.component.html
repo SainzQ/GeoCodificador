@@ -1,0 +1,35 @@
+<br>
+<div class="card flex justify-content-center" style="width: 100%;">
+  <div class="flex flex-column gap-2" style="width: 100%;">
+    <span class="p-float-label" style="width: 100%;">
+      <input pInputText id="nombreProyecto" [(ngModel)]="nombreProyecto" style="width: 100%;"
+        #nombreProyectoInput="ngModel" required (input)="validarNombreProyecto()" />
+      <label htmlFor="nombreProyecto">Nombre del nuevo proyecto</label>
+    </span>
+  </div>
+</div>
+<br>
+
+<div class="card flex justify-content-center">
+  <p-toast></p-toast>
+  <p-fileUpload name="demo[]" url="https://www.primefaces.org/cdn/api/upload.php" (onUpload)="onUpload($event)"
+    [multiple]="false" accept=".xlsx, .csv" [disabled]="botonSubirDeshabilitado" [maxFileSize]="1000000"
+    uploadLabel="Subir" cancelLabel="Cancelar" chooseLabel="Cargar" styleClass="color"
+    invalidFileTypeMessageSummary="Tipo de archivo no válido"
+    invalidFileTypeMessageDetail="Los tipos de archivos permitidos son: .xlsx, .csv"
+    invalidFileSizeMessageSummary="Tamaño de archivo excedido"
+    invalidFileSizeMessageDetail="El tamaño máximo permitido es de 5MB">
+    <ng-template pTemplate="content" let-files>
+      <div class="file-upload-content" *ngIf="!files || files.length === 0">
+        <div class="text-center upload-container">
+          <i class="pi pi-cloud-upload upload-icon" style="font-size: 90px"></i>
+          <h3 class="mb-1">Arrastra y suelta archivos aquí para subirlos.</h3>
+          <P class="mt-0">Formatos permitidos: .xlsx y .csv</P>
+        </div>
+      </div>
+      <ul *ngIf="uploadedFiles.length">
+        <li *ngFor="let file of uploadedFiles">{{ file.name }} - {{ file.size }} bytes</li>
+      </ul>
+    </ng-template>
+  </p-fileUpload>
+</div>
