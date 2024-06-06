@@ -1,47 +1,28 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { MatTableModule } from '@angular/material/table';
+import { TableModule } from './modules/table.module';
+import { AppRoutingModule } from './app-routing.module';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 
-import { FileUploadModule } from 'primeng/fileupload';
-import { ToastModule } from 'primeng/toast';
 import { AppComponent } from './app.component';
-import { CardModule } from 'primeng/card';
-import { TableModule } from 'primeng/table';
-import { ButtonModule } from 'primeng/button';
-import { HttpClientModule } from '@angular/common/http';
-import { BadgeModule } from 'primeng/badge';
-import { ProgressBarModule } from 'primeng/progressbar';
-import { DialogModule } from 'primeng/dialog';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { InputTextModule } from 'primeng/inputtext';
-import { FormsModule } from '@angular/forms';
-import { DropdownModule } from 'primeng/dropdown';
+import { CustomerComponent } from './pages/customers/customer.component';
+import { TableCustomersComponent } from './components/table-customers/table-customers.component';
 
-import { DialogComponent } from './tabla/importar/dialog/dialog.component';
-import { CargarArchivoComponent } from './tabla/importar/cargar-archivo/cargar-archivo.component';
+
 
 @NgModule({
   declarations: [
     AppComponent,
-    DialogComponent,
-    CargarArchivoComponent,
-    DialogComponent
+    CustomerComponent,
+    TableCustomersComponent,
   ],
   imports: [
     BrowserModule,
-    CardModule,
-    TableModule,
-    ButtonModule,
-    FileUploadModule,
-    ToastModule,
-    HttpClientModule,
-    ButtonModule,
-    BadgeModule,
-    ProgressBarModule,
-    DialogModule,
+    AppRoutingModule,
     BrowserAnimationsModule,
-    InputTextModule,
-    FormsModule,
-    DropdownModule
+    MatTableModule,
+    TableModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

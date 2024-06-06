@@ -1,0 +1,150 @@
+<div style="position: relative;">
+    <div *ngIf="isLoading"
+        style="display: flex; justify-content: center; align-items: center; position: absolute; top: 0; right: 0; left: 0; bottom: 0; background-color: #cecece66; z-index: 1;">
+        <p-progressSpinner></p-progressSpinner>
+    </div>
+
+    <!-- Agregado el h1 -->
+    <h1 style="text-align: left;">Proyectos Almacenados</h1>
+
+    <!-- Botones del lado derecho -->
+    <div class="card flex flex-wrap justify-content-end">
+        <!-- Toast and ConfirmPopup for notifications and confirmations -->
+        <p-toast></p-toast>
+        <p-confirmPopup></p-confirmPopup>
+
+        <!-- Buttons for different actions with custom class -->
+        <p-button class="custom-button" label="Importar" (click)="showDialog()" icon="pi pi-cloud-download"></p-button>
+        <!-- Dialog for file upload -->
+        <p-dialog header="Crear proyecto" [(visible)]="visible" [modal]="true" [breakpoints]="{ '960px': '75vw' }"
+            [style]="{ width: '50vw', maxWidth: '1450px' }" [draggable]="false" [resizable]="true" [maximizable]="true">
+            <app-cargar-archivo></app-cargar-archivo>
+        </p-dialog>
+        <p-button class="custom-button" label="Estandarizar" icon="pi pi-chart-bar"></p-button>
+        <p-button class="custom-button" label="Geocodificar" icon="pi pi-globe"></p-button>
+        <p-button class="custom-button" icon="pi pi-cloud-upload" label="Exportar"></p-button>
+
+
+
+        <!-- Search input field -->
+        <div *ngIf="tableConfig?.showFilter" class="p-input-icon-left">
+            <i class="pi pi-search"></i>
+            <input type="text" class="p-inputtext" placeholder="Buscar..." matInput (keyup)="applyFilter($event)"
+                #input />
+        </div>
+
+        <!-- Delete button with custom class -->
+        <p-button class="custom-button" (click)="eliminar($event)" label="Eliminar" icon="pi pi-trash"
+            severity="danger"></p-button>
+    </div>
+
+
+
+    <!-- Table -->
+    <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+
+        <!-- Checkbox -->
+        <!-- Selección de todos los campos -->
+        <ng-container matColumnDef="select">
+            <th mat-header-cell *matHeaderCellDef>
+                <mat-checkbox (change)="$event ? toggleAllRows() : null"
+                    [checked]="selection.hasValue() && isAllSelected()"
+                    [indeterminate]="selection.hasValue() && !isAllSelected()" [aria-label]="checkboxLabel()">
+                </mat-checkbox>
+            </th>
+            <!-- Selección individual -->
+            <td mat-cell *matCellDef="let row">
+                <mat-checkbox (click)="$event.stopPropagation()"
+                    (change)="$event ? selection.toggle(row) : null; onSelect()" [checked]="selection.isSelected(row)"
+                    [aria-label]="checkboxLabel(row)">
+                </mat-checkbox>
+            </td>
+        </ng-container>
+
+        <!-- <ng-container matColumnDef="Progreso">
+            <th mat-header-cell *matHeadrCellDef>Progreso</th>
+            <td mar-cell *matCellDef="let row">
+            <p-toast></p-toast>
+            <p-progressBar [value]="50"></p-progressBar>
+            </td>
+        </ng-container>  -->
+        <ng-container matColumnDef="Progreso">
+            <th mat-header-cell *matHeadrCellDef>Progreso</th>
+            <td mar-cell *matCellDef="let row">
+                <p-toast></p-toast>
+                <p-progressBar [value]="50"></p-progressBar>
+            </td>
+        </ng-container>
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let row; let i = index">
+                <ng-container *ngIf="isEditMode && currentRowIndex === i; else viewMode">
+                    <button (click)="onCancel()">Cancel</button>
+                    <button (click)="onSave()">Save</button>
+                </ng-container>
+                <ng-template #viewMode>
+                    <button mat-button (click)="onEdit(row, i)">Edit</button>
+                    <!-- <button mat-button (click)="onDelete(row)">Delete</button> -->
+                </ng-template>
+            </td>
+        </ng-container>
+
+        <!-- Table Columns -->
+        <ng-container *ngFor="let column of tableColumns" [matColumnDef]="column.def">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ column.label }}</th>
+            <td mat-cell *matCellDef="let row; let i = index">
+                <ng-container [formGroup]="formGroup" *ngIf="isEditMode && currentRowIndex === i; else viewMode">
+                    <ng-container [ngSwitch]="column.controlType">
+                        <ng-container *ngSwitchCase="'check'">
+                            <mat-checkbox [formControlName]="column.def"></mat-checkbox>
+                        </ng-container>
+                        <ng-container *ngSwitchCase="'radio'">
+                            <mat-radio-group [formControlName]="column.def">
+                                <mat-radio-button *ngFor="let option of column.data"
+                                    [value]="option">{{option}}</mat-radio-button>
+                            </mat-radio-group>
+                        </ng-container>
+                        <ng-container *ngSwitchCase="'date'">
+                            <mat-form-field>
+                                <input matInput [matDatepicker]="picker" [formControlName]="column.def" />
+                                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                                <mat-datepicker #picker></mat-datepicker>
+                            </mat-form-field>
+                        </ng-container>
+                        <ng-container *ngSwitchCase="'select'">
+                            <mat-select [formControlName]="column.def">
+                                <mat-option *ngFor="let option of column.data" [value]="option">
+                                    {{option}}
+                                </mat-option>
+                            </mat-select>
+                        </ng-container>
+                        <ng-container *ngSwitchDefault="">
+                            <mat-form-field>
+                                <input matInput [formControlName]="column.def" />
+                            </mat-form-field>
+                        </ng-container>
+                    </ng-container>
+                </ng-container>
+                <ng-template #viewMode>
+                    {{ getValue(row, column.dataKey) }}
+                </ng-template>
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="tableDisplayColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: tableDisplayColumns;"></tr>
+        <!-- Cuando la búsqueda no es correcta -->
+        <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell" [colSpan]="tableDisplayColumns.length">
+                No se encontró ningún resultado que coincida con la búsqueda "{{currentFilterValue}}"
+            </td>
+        </tr>
+
+    </table>
+    <!-- Paginador -->
+    <ng-container *ngIf="tableConfig?.isPaginable">
+        <mat-paginator [length]="dataSource.data.length" [pageSizeOptions]="[5, 10, 20]" aria-label="Select page">
+        </mat-paginator>
+    </ng-container>
+</div>

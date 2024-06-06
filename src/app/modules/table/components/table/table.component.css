@@ -1,0 +1,18 @@
+table {
+  width: 100%;
+}
+.card {
+  padding: 1rem;
+  margin-right: 0; /* Ensure no extra margin on the right */
+  display: flex; /* Add this line */
+  align-items: center; /* Add this line */
+  justify-content: flex-end; /* Add this line */
+}
+
+.custom-button {
+  margin: 0 0.5rem; /* Margin on the left and right of each button */
+}
+
+.p-input-icon-left {
+  margin-left: auto; /* Add this line to push the search input field to the left */
+}
