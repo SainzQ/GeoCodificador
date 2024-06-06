@@ -13,16 +13,19 @@ import * as XLSX from 'xlsx';
 
 export class CargarArchivoComponent {
 
+  workbook: XLSX.WorkBook | null = null;
   nombreProyecto: string | undefined;
-  uploadedFiles: File[] = []; // tipo File
+  uploadedFiles: File[] = [];
   botonSubirDeshabilitado = true;
+  dropdownDeshabilitado = true;
   hojasExcel: string[] = [];
+  hojaSeleccionada: string | undefined;
+  datosExcel: any[] = [];
 
-  @ViewChild('nombreProyectoInput') nombreProyectoInput!: NgModel; //Suscribirse al componente hijo
-
+  @ViewChild('nombreProyectoInput') nombreProyectoInput!: NgModel;
+  @ViewChild('dropdownHoja') dropdownHoja!: NgModel; //Suscribirse al componente hijo
 
   constructor(private messageService: MessageService) { }
-
 
   validarNombreProyecto() {
     const nombreProyecto = this.nombreProyecto?.trim(); //Quita espacios al inicio y al final
@@ -54,7 +57,7 @@ export class CargarArchivoComponent {
       this.uploadedFiles.push(file);
       this.leerExcel(file);
     }
-
+    this.dropdownDeshabilitado = false;
     this.messageService.add({ severity: 'info', summary: 'Archivo cargado!', detail: '' });
   }
 
@@ -64,12 +67,30 @@ export class CargarArchivoComponent {
     fileReader.onload = () => {
       const data = new Uint8Array(fileReader.result as ArrayBuffer);
       const workbook = XLSX.read(data, { type: 'array' });
+      this.workbook = workbook;
       const sheet_name_list = workbook.SheetNames;
       this.hojasExcel = sheet_name_list;
       console.log(this.hojasExcel);
     };
 
     fileReader.readAsArrayBuffer(file);
+  }
+
+  obtenerDatosHojaEnJSON() {
+    if (this.workbook && this.hojaSeleccionada) {
+      const worksheet = this.workbook.Sheets[this.hojaSeleccionada];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      this.datosExcel = jsonData;
+      console.log(this.datosExcel);
+
+    } else {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error al obtener datos de hoja',
+        detail: 'Por favor, seleccione una hoja de Excel antes de obtener los datos o intente recargar la pagina.'
+      });
+      this.dropdownHoja.control?.markAsDirty();
+    }
   }
 
 }

@@ -18,13 +18,15 @@ import { DropdownModule } from 'primeng/dropdown';
 
 import { DialogComponent } from './tabla/importar/dialog/dialog.component';
 import { CargarArchivoComponent } from './tabla/importar/cargar-archivo/cargar-archivo.component';
+import { SeleccionarDatosComponent } from './tabla/importar/seleccionar-datos/seleccionar-datos.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     DialogComponent,
     CargarArchivoComponent,
-    DialogComponent
+    DialogComponent,
+    SeleccionarDatosComponent
   ],
   imports: [
     BrowserModule,
