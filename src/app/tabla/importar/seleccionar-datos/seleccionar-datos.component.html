@@ -1,10 +1,39 @@
-<div class="card flex justify-content-center">
-  <p-dropdown [options]="datos" [(ngModel)]="datosSeleccionados" placeholder="Select a City" [group]="true">
-      <ng-template let-group pTemplate="group">
-          <div class="flex align-items-center">
-              <img src="https://primefaces.org/cdn/primeng/images/demo/flag/flag_placeholder.png" [class]="'mr-2 flag flag-' + group.value" style="width: 20px" />
-              <span>{{ group.label }}</span>
+<div class="card">
+  <p-table [columns]="columnas" [value]="json.slice(0, 5)" [rows]="5" [tableStyle]="{ 'min-width': '50rem' }">
+    <ng-template pTemplate="header" let-columns>
+      <tr>
+        <th *ngFor="let col of columns">
+          {{ col.header }}
+          <div class="card flex justify-content-center">
+            <p-dropdown
+              appendTo="body"
+              [options]="datos"
+              [(ngModel)]="datosSeleccionados[col.header]"
+              placeholder="Valor"
+              [group]="true"
+              [showClear]="true"
+              (ngModelChange)="manejarCambioDropdown(col.header, $event)"
+            >
+              <ng-template let-group pTemplate="group">
+                <div class="flex align-items-center">
+                  <img
+                    src="https://primefaces.org/cdn/primeng/images/demo/flag/flag_placeholder.png"
+                    [class]="'mr-2 flag flag-' + group.value"
+                    style="width: 20px"
+                  />
+                  <span>{{ group.label }}</span>
+                </div>
+              </ng-template>
+            </p-dropdown>
           </div>
-      </ng-template>
-  </p-dropdown>
+        </th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-rowData let-columns="columns">
+      <tr>
+        <td *ngFor="let col of columns">{{ rowData[col.field] }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
 </div>
+<p-button (click)="GuardarProyecto()" icon="pi pi-external-link" label="Importar"></p-button>

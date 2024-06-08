@@ -28,11 +28,9 @@
   margin-bottom: 0.25rem;
 }
 
-.container-hcalculo{
+.container-hcalculo {
   width: 100%;
   padding-top: 20px;
   display: flex;
   justify-content: space-between;
 }
-
-
