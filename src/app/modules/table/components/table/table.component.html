@@ -5,27 +5,28 @@
     </div>
 
     <!-- Agregado el h1 -->
-    <h1 style="text-align: left;">Proyectos Almacenados</h1>
+    <!-- <h1 style="text-align: left;">Proyectos Almacenados</h1> -->
 
     <!-- Botones del lado derecho -->
-    <div class="card flex flex-wrap justify-content-end">
+    <div class="card d-flex justify-content-end">
+        <h4 >Proyectos Almacenados</h4>
+
         <!-- Toast and ConfirmPopup for notifications and confirmations -->
         <p-toast></p-toast>
         <p-confirmPopup></p-confirmPopup>
 
         <!-- Buttons for different actions with custom class -->
-        <p-button class="custom-button" label="Importar" (click)="showDialog()" icon="pi pi-cloud-download"></p-button>
+        <p-button class="custom-button mr-2" label="Importar" (click)="showDialog()"
+            icon="pi pi-cloud-download"></p-button>
         <!-- Dialog for file upload -->
         <p-dialog header="Crear proyecto" [(visible)]="visible" [modal]="true" [breakpoints]="{ '960px': '75vw' }"
             [style]="{ width: '50vw', maxWidth: '1450px' }" [draggable]="false" [resizable]="true" [maximizable]="true">
             <app-cargar-archivo></app-cargar-archivo>
         </p-dialog>
-        <p-button class="custom-button" label="Estandarizar" icon="pi pi-chart-bar"></p-button>
-        <p-button class="custom-button" label="Geocodificar" icon="pi pi-globe"></p-button>
-        <p-button class="custom-button" icon="pi pi-cloud-upload" label="Exportar"></p-button>
-
-
-
+        <p-button class="custom-button mr-1" label="Estandarizar" icon="pi pi-chart-bar"></p-button>
+        <p-button class="custom-button mr-1" label="Geocodificar" icon="pi pi-globe"></p-button>
+        <!-- Aplicación de la clase personalizada al botón de "Exportar" -->
+        <p-button class="custom-button custom-margin" icon="pi pi-cloud-upload" label="Exportar"></p-button>
         <!-- Search input field -->
         <div *ngIf="tableConfig?.showFilter" class="p-input-icon-left">
             <i class="pi pi-search"></i>
@@ -142,9 +143,10 @@
         </tr>
 
     </table>
-    <!-- Paginador -->
-    <ng-container *ngIf="tableConfig?.isPaginable">
-        <mat-paginator [length]="dataSource.data.length" [pageSizeOptions]="[5, 10, 20]" aria-label="Select page">
-        </mat-paginator>
-    </ng-container>
-</div>
+    <div class="paginator-container">
+        <ng-container *ngIf="tableConfig?.isPaginable">
+            <p-paginator *ngIf="tableConfig?.isPaginable" (onPageChange)="onPageChange($event)" [first]="first"
+                [rows]="rows" [totalRecords]="filteredData.length" [rowsPerPageOptions]="[5, 10, 20]">
+            </p-paginator>
+        </ng-container>
+    </div>

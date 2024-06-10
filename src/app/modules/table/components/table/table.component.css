@@ -16,3 +16,13 @@ table {
 .p-input-icon-left {
   margin-left: auto; /* Add this line to push the search input field to the left */
 }
+.paginator-container {
+  display: flex;
+  justify-content: flex-end; /* Alinea el contenido al final (derecha) */
+  margin-top: 10px; /* Ajusta el margen superior si es necesario */
+}
+
+/* CSS personalizado */
+.custom-margin {
+  margin-right: 5px; /* Ajusta este valor según sea necesario */
+}

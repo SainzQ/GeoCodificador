@@ -2,9 +2,7 @@ import { FormControl, FormGroup } from '@angular/forms';
 import { AfterViewInit, ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatSort } from '@angular/material/sort';
-import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
-
 import { TableConfig } from '../../models/table-config.model';
 import { TableAction } from '../../models/table-action.model';
 import { TABLE_ACTION } from '../../enums/table-action.enum';
@@ -14,14 +12,13 @@ import { ConfirmationService, MessageService, ConfirmEventType } from 'primeng/a
 
 @Component({
     selector: 'app-table',
-
     templateUrl: './table.component.html',
     styleUrls: ['./table.component.css'],
     providers: [ConfirmationService, MessageService]
-
 })
 export class TableComponent implements OnInit, AfterViewInit {
     dataSource: MatTableDataSource<any> = new MatTableDataSource();
+    originalData: any[] = []; // Para mantener los datos originales
     tableDisplayColumns: string[] = [];
     tableColumns: TableColumn[] = [];
     selection = new SelectionModel<any>(true, []);
@@ -32,37 +29,52 @@ export class TableComponent implements OnInit, AfterViewInit {
     formGroup: FormGroup = new FormGroup({});
     value: number = 0;
     visible: boolean = false;
+    first: number = 0;
+    rows: number = 10;
+    filteredData: any[] = [];
+
+    onPageChange(event: any) {
+        this.first = event.first;
+        this.rows = event.rows;
+        this.updatePagedData();
+    }
+
     showDialog() {
         this.visible = true;
-      }
+    }
 
-    @ViewChild(MatPaginator) paginator!: MatPaginator;
     @ViewChild(MatSort) matSort!: MatSort;
 
     @Input() set data(data: any[]) {
-        console.log('Setting data', data);//Debug
-        this.dataSource = new MatTableDataSource(data);
-        this.dataSource.paginator = this.paginator;
+        console.log('Setting data', data);
+        this.originalData = data;
+        this.filteredData = data;
+        this.updatePagedData();
         this.dataSource.sort = this.matSort;
     }
+
     @Input() set columns(columns: TableColumn[]) {
         console.log('Setting columns', columns);
         this.tableColumns = columns;
         this.tableDisplayColumns = this.tableColumns.map((col) => col.def);
     }
+
     @Input() set config(config: TableConfig) {
         this.setConfig(config);
     }
+
     @Input() createNewFormGroup!: (item: any) => FormGroup;
-    @Input() isLoading = false;//spinner
+    @Input() isLoading = false;
 
     @Output() select: EventEmitter<any> = new EventEmitter();
     @Output() action: EventEmitter<TableAction> = new EventEmitter();
 
     private getColumnValue: ColumnValuePipe = new ColumnValuePipe();
 
-
-    constructor(private confirmationService: ConfirmationService, private messageService: MessageService) { }
+    constructor(private confirmationService: ConfirmationService, private messageService: MessageService) {
+        this.first = 0;
+        this.rows = 10;
+    }
 
     ngOnInit(): void {
         let interval = setInterval(() => {
@@ -76,9 +88,7 @@ export class TableComponent implements OnInit, AfterViewInit {
     }
 
     ngAfterViewInit(): void {
-        this.dataSource.paginator = this.paginator;
         this.dataSource.sort = this.matSort;
-        // this.dataSource.sort = this.matSort;
         this.dataSource.sortingDataAccessor = (data, sortHeaderId) => {
             return this.getValue(data, sortHeaderId);
         };
@@ -97,6 +107,7 @@ export class TableComponent implements OnInit, AfterViewInit {
             this.tableDisplayColumns.push('actions')
         }
     }
+
     isAllSelected() {
         const numSelected = this.selection.selected.length;
         const numRows = this.dataSource.data.length;
@@ -112,12 +123,14 @@ export class TableComponent implements OnInit, AfterViewInit {
         this.selection.select(...this.dataSource.data);
         this.onSelect();
     }
+
     checkboxLabel(row?: any): string {
         if (!row) {
             return `${this.isAllSelected() ? 'deselect' : 'select'} all`;
         }
         return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.position + 1}`;
     }
+
     onEdit(row: any, index: number) {
         this.isEditMode = true;
         this.currentRowIndex = index;
@@ -136,16 +149,28 @@ export class TableComponent implements OnInit, AfterViewInit {
         this.action.emit({ action: TABLE_ACTION.SAVE, row: newRow });
         this.isEditMode = false;
         this.currentRowIndex = undefined;
-
     }
+
     onDelete(row: any) {
         this.action.emit({ action: TABLE_ACTION.DELETE, row });
     }
 
     applyFilter(event: Event) {
         const filterValue = (event.target as HTMLInputElement).value;
-        this.dataSource.filter = filterValue.trim().toLowerCase();
-        this.currentFilterValue = filterValue;
+        this.currentFilterValue = filterValue.trim().toLowerCase();
+        this.filteredData = this.originalData.filter(item => 
+            Object.values(item).some(val => 
+                String(val).toLowerCase().includes(this.currentFilterValue)
+            )
+        );
+        this.first = 0; // Reset the paginator to the first page
+        this.updatePagedData();
+    }
+
+    updatePagedData() {
+        const start = this.first;
+        const end = this.first + this.rows;
+        this.dataSource.data = this.filteredData.slice(start, end);
     }
 
     getValue(row: any, columName: string): string | number {
@@ -156,12 +181,10 @@ export class TableComponent implements OnInit, AfterViewInit {
             if (typeof value === 'string' || typeof value === 'number') {
                 return value;
             }
-
         }
         return '';
     }
 
-    
     eliminar(event: Event) {
         this.confirmationService.confirm({
             target: event.target as EventTarget,
@@ -174,39 +197,5 @@ export class TableComponent implements OnInit, AfterViewInit {
                 this.messageService.add({ severity: 'error', summary: 'Cancelado', detail: 'No se a eliminado el proyecto' });
             }
         });
-    
-        // this.confirmationService.confirm({
-        //     message: '¿Está seguro que desea eliminar el registro? Esta acción será irreversible.',
-        //     acceptLabel: 'Sí',
-        //     rejectLabel: 'No',
-        //     accept: () => {
-        //         this.messageService.add({
-        //             severity: 'success',
-        //             summary: 'Eliminado',
-        //             detail: 'Proyecto eliminado correctamente',
-        //             icon: 'pi pi-check'
-        //         });
-        //     },
-        //     reject: (type: ConfirmEventType) => {
-        //         switch (type) {
-        //             case ConfirmEventType.REJECT:
-        //                 this.messageService.add({
-        //                     severity: 'info',
-        //                     summary: 'Rechazado',
-        //                     detail: 'Has rechazado la eliminación',
-        //                     icon: 'pi pi-times'
-        //                 });
-        //                 break;
-        //             case ConfirmEventType.CANCEL:
-        //                 this.messageService.add({
-        //                     severity: 'warn',
-        //                     summary: 'Cancelado',
-        //                     detail: 'La eliminación ha sido cancelada',
-        //                     icon: 'pi pi-exclamation-triangle'
-        //                 });
-        //                 break;
-        //         }
-        //     }
-        // });
     }
-}      
+}

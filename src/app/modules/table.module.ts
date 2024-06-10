@@ -3,7 +3,6 @@ import { CommonModule } from "@angular/common";
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MatTableModule } from "@angular/material/table";
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatInputModule } from '@angular/material/input';
 import { MatSortModule } from '@angular/material/sort';
 import { MatRadioModule } from '@angular/material/radio';
@@ -25,7 +24,10 @@ import { MessageService } from 'primeng/api';
 import { TableComponent } from "./table/components/table/table.component";
 import { ColumnValuePipe } from './table/pipes/column-value.pipe';
 import { CargarArchivoComponent } from "./cargar-archivo/cargar-archivo.component";
+import {DialogComponent} from "./dialog/dialog.component"
+import {SeleccionarDatosComponent} from "./seleccionar-datos/seleccionar-datos.component";
 import { ProgressBarModule } from 'primeng/progressbar';
+import { TableModule as PrimeNgTableModule } from 'primeng/table';
 // For dynamic progressbar demo
 import { ToastModule } from 'primeng/toast';
 
@@ -33,13 +35,16 @@ import { ToastModule } from 'primeng/toast';
     declarations: [
         TableComponent, 
         ColumnValuePipe,
-        CargarArchivoComponent
+        CargarArchivoComponent,
+        DialogComponent,
+        SeleccionarDatosComponent
     ],
     imports: [
+        PrimeNgTableModule,
         CommonModule,
         MatTableModule,
         MatCheckboxModule,
-        MatPaginatorModule,
+        
         MatInputModule,
         MatSortModule,
         MatRadioModule,
@@ -58,7 +63,6 @@ import { ToastModule } from 'primeng/toast';
         DialogModule,
         ProgressSpinnerModule,
         FileUploadModule,
-        PaginatorModule
     ],
     exports: [
         TableComponent,
