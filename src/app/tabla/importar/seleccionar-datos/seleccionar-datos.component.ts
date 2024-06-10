@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { SelectItemGroup } from 'primeng/api';
+import { MessageService, SelectItemGroup } from 'primeng/api';
 
 interface JsonObject {
   [key: string]: any;
@@ -8,6 +8,7 @@ interface JsonObject {
 @Component({
   selector: 'app-seleccionar-datos',
   templateUrl: './seleccionar-datos.component.html',
+  providers: [MessageService],
   styleUrls: ['./seleccionar-datos.component.css']
 })
 
@@ -51,6 +52,19 @@ export class SeleccionarDatosComponent {
   }
 
   GuardarProyecto() {
+    const opcionesObligatorias = this.datos.find(grupo => grupo.value === 'OB')?.items || [];
+    const opcionesObligatoriasSeleccionadas = Object.values(this.datosSeleccionados).filter(valor => opcionesObligatorias.some(item => item.value === valor));
+
+    if (opcionesObligatoriasSeleccionadas.length !== opcionesObligatorias.length) {
+      // Mostrar notificación de error
+      console.log('Error al guardar');
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error al Guardar',
+        detail: 'Por favor, seleccione todas las opciones marcadas como "Obligatorias" para continuar.'
+      });
+      return; // Salir del método sin crear el nuevo JSON
+    }
     const nuevoJSON = this.crearNuevoJSON();
     console.log(nuevoJSON);
 
@@ -74,28 +88,30 @@ export class SeleccionarDatosComponent {
     }
   }
 
-  constructor() {
+  constructor(private messageService: MessageService) {
     this.datos = [
       {
         label: 'Obligatorios',
         value: 'OB',
         items: [
+          { label: 'ID Domicilio', value: 'id_req' },
           { label: 'Calle', value: 'calle' },
-          { label: 'Colonia', value: 'colonia' },
           { label: 'Municipio', value: 'municipio' },
-          { label: 'Estado', value: 'estado' },
-          { label: 'Codigo Postal', value: 'codigo_postal' }
         ]
       },
       {
         label: 'Opcionales',
         value: 'OP',
         items: [
+          { label: 'Nombre', value: 'nombre' },
+          { label: 'Colonia', value: 'colonia' },
           { label: 'Region', value: 'region' },
+          { label: 'Estado', value: 'estado' },
+          { label: 'Codigo Postal', value: 'codigo_postal' },
           { label: 'Comentarios del Domicilio', value: 'comentarios_dom' },
-          { label: 'ID Domicilio', value: 'id_req' },
-          { label: 'Número Exterior', value: 'numero_exterior' }
-
+          { label: 'Referencias del Domicilio', value: 'referencias_dom' },
+          { label: 'Número Exterior', value: 'numero_exterior' },
+          { label: 'Telefono', value: 'telefono' }
         ]
       }
     ];

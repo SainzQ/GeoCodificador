@@ -1,26 +1,19 @@
-<div class="card">
-  <p-table [columns]="columnas" [value]="json.slice(0, 5)" [rows]="5" [tableStyle]="{ 'min-width': '50rem' }">
+<p-toast></p-toast>
+<p>A continuacion, selecciona las columnas a guardar de tu archivo.</p>
+<div class="card container-tabla">
+  <p-table [columns]="columnas" [value]="json.slice(0, 3)" [rows]="5" [tableStyle]="{ 'min-width': '50rem' }">
     <ng-template pTemplate="header" let-columns>
       <tr>
         <th *ngFor="let col of columns">
           {{ col.header }}
           <div class="card flex justify-content-center">
-            <p-dropdown
-              appendTo="body"
-              [options]="datos"
-              [(ngModel)]="datosSeleccionados[col.header]"
-              placeholder="Valor"
-              [group]="true"
-              [showClear]="true"
-              (ngModelChange)="manejarCambioDropdown(col.header, $event)"
-            >
+            <p-dropdown appendTo="body" [options]="datos" [(ngModel)]="datosSeleccionados[col.header]"
+              placeholder="Valor" [group]="true" [showClear]="true"
+              (ngModelChange)="manejarCambioDropdown(col.header, $event)">
               <ng-template let-group pTemplate="group">
                 <div class="flex align-items-center">
-                  <img
-                    src="https://primefaces.org/cdn/primeng/images/demo/flag/flag_placeholder.png"
-                    [class]="'mr-2 flag flag-' + group.value"
-                    style="width: 20px"
-                  />
+                  <img src="https://primefaces.org/cdn/primeng/images/demo/flag/flag_placeholder.png"
+                    [class]="'mr-2 flag flag-' + group.value" style="width: 20px" />
                   <span>{{ group.label }}</span>
                 </div>
               </ng-template>
@@ -36,4 +29,9 @@
     </ng-template>
   </p-table>
 </div>
-<p-button (click)="GuardarProyecto()" icon="pi pi-external-link" label="Importar"></p-button>
+<div class="container-guardar">
+<p-button class="ml-4" (click)="GuardarProyecto()" icon="pi pi-save" label="Guardar Proyecto" severity="success"
+  iconPos="right"></p-button>
+</div>
+<!-- <p-button class="ml-4" (click)="obtenerDatosHojaEnJSON()" icon="pi pi-arrow-right" label="Siguiente"
+    severity="success" iconPos="right" class="button-d" [disabled]="botonSiguienteDeshabilitado"></p-button> -->

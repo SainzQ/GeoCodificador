@@ -1,0 +1,9 @@
+.container-guardar {
+  display: flex;
+  justify-content: right;
+  margin-top: 20px;
+}
+
+.container-tabla {
+  margin-top: 20px;
+}
