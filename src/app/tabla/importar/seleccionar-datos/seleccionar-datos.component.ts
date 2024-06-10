@@ -39,7 +39,8 @@ export class SeleccionarDatosComponent {
       for (const clave of Object.keys(fila)) {
         const claveSeleccionada = this.datosSeleccionados[clave.toUpperCase()];
         if (claveSeleccionada) {
-          nuevaFila[claveSeleccionada] = fila[clave];
+          const valor = fila[clave];
+          nuevaFila[claveSeleccionada] = valor.toString();
         }
       }
 
@@ -52,6 +53,7 @@ export class SeleccionarDatosComponent {
   GuardarProyecto() {
     const nuevoJSON = this.crearNuevoJSON();
     console.log(nuevoJSON);
+
   }
 
   manejarCambioDropdown(header: string, valor: string) {
