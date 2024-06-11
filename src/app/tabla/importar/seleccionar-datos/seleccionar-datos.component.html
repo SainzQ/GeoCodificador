@@ -1,5 +1,6 @@
 <p-toast></p-toast>
-<p>A continuacion, selecciona las columnas a guardar de tu archivo.</p>
+<p-confirmPopup></p-confirmPopup>
+<p>A continuacion, selecciona las columnas a guardar. Toma como muestra los siguientes datos de tu documento.</p>
 <div class="card container-tabla">
   <p-table [columns]="columnas" [value]="json.slice(0, 3)" [rows]="5" [tableStyle]="{ 'min-width': '50rem' }">
     <ng-template pTemplate="header" let-columns>
@@ -30,7 +31,8 @@
   </p-table>
 </div>
 <div class="container-guardar">
-<p-button class="ml-4" (click)="GuardarProyecto()" icon="pi pi-save" label="Guardar Proyecto" severity="success"
+
+<p-button class="ml-4" (click)="GuardarProyecto($event)" icon="pi pi-save" label="Guardar Proyecto" severity="success"
   iconPos="right"></p-button>
 </div>
 <!-- <p-button class="ml-4" (click)="obtenerDatosHojaEnJSON()" icon="pi pi-arrow-right" label="Siguiente"

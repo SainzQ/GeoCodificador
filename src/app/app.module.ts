@@ -19,6 +19,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { DialogComponent } from './tabla/importar/dialog/dialog.component';
 import { CargarArchivoComponent } from './tabla/importar/cargar-archivo/cargar-archivo.component';
 import { SeleccionarDatosComponent } from './tabla/importar/seleccionar-datos/seleccionar-datos.component';
+import { ConfirmPopupModule } from 'primeng/confirmpopup';
 
 @NgModule({
   declarations: [
@@ -43,7 +44,8 @@ import { SeleccionarDatosComponent } from './tabla/importar/seleccionar-datos/se
     BrowserAnimationsModule,
     InputTextModule,
     FormsModule,
-    DropdownModule
+    DropdownModule,
+    ConfirmPopupModule
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { MessageService, SelectItemGroup } from 'primeng/api';
+import { ConfirmationService, MessageService, SelectItemGroup } from 'primeng/api';
 
 interface JsonObject {
   [key: string]: any;
@@ -8,13 +8,14 @@ interface JsonObject {
 @Component({
   selector: 'app-seleccionar-datos',
   templateUrl: './seleccionar-datos.component.html',
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   styleUrls: ['./seleccionar-datos.component.css']
 })
 
 export class SeleccionarDatosComponent {
   @Input() json: JsonObject[] = [];
   @Input() str: string | undefined;
+
 
   datos: SelectItemGroup[];
   datosSeleccionados: { [header: string]: string } = {};
@@ -30,7 +31,6 @@ export class SeleccionarDatosComponent {
     }
   }
 
-
   crearNuevoJSON(): JsonObject[] {
     const nuevoJSON: JsonObject[] = [];
 
@@ -40,8 +40,15 @@ export class SeleccionarDatosComponent {
       for (const clave of Object.keys(fila)) {
         const claveSeleccionada = this.datosSeleccionados[clave.toUpperCase()];
         if (claveSeleccionada) {
-          const valor = fila[clave];
+          const valor = fila[clave] ?? '';
           nuevaFila[claveSeleccionada] = valor.toString();
+        }
+      }
+
+      for (const clave of Object.keys(this.datosSeleccionados)) {
+        const claveSeleccionada = this.datosSeleccionados[clave];
+        if (!nuevaFila.hasOwnProperty(claveSeleccionada)) {
+          nuevaFila[claveSeleccionada] = '';
         }
       }
 
@@ -51,22 +58,38 @@ export class SeleccionarDatosComponent {
     return nuevoJSON;
   }
 
-  GuardarProyecto() {
+  GuardarProyecto(event: Event) {
     const opcionesObligatorias = this.datos.find(grupo => grupo.value === 'OB')?.items || [];
     const opcionesObligatoriasSeleccionadas = Object.values(this.datosSeleccionados).filter(valor => opcionesObligatorias.some(item => item.value === valor));
 
     if (opcionesObligatoriasSeleccionadas.length !== opcionesObligatorias.length) {
-      // Mostrar notificación de error
       console.log('Error al guardar');
       this.messageService.add({
         severity: 'error',
         summary: 'Error al Guardar',
         detail: 'Por favor, seleccione todas las opciones marcadas como "Obligatorias" para continuar.'
       });
-      return; // Salir del método sin crear el nuevo JSON
+      return;
     }
-    const nuevoJSON = this.crearNuevoJSON();
-    console.log(nuevoJSON);
+
+    this.confirmationService.confirm({
+      target: event.target as EventTarget,
+      message: 'Seguro que deseas continuar?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Si',
+      rejectLabel: 'No',
+      accept: () => {
+        this.messageService.add({ severity: 'info', summary: 'Confirmed', detail: 'You have accepted' });
+        const nuevoJSON = this.crearNuevoJSON();
+        console.log(nuevoJSON);
+      },
+      reject: () => {
+
+      }
+
+    });
+
+
 
   }
 
@@ -88,7 +111,7 @@ export class SeleccionarDatosComponent {
     }
   }
 
-  constructor(private messageService: MessageService) {
+  constructor(private confirmationService: ConfirmationService, private messageService: MessageService) {
     this.datos = [
       {
         label: 'Obligatorios',
