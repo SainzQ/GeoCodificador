@@ -10,7 +10,7 @@
 
     <!-- Componente Seleccionar Datos -->
     <ng-container *ngIf="!showCargarArchivo">
-      <app-seleccionar-datos [json]="jsonData" [str]="stringData"></app-seleccionar-datos>
+      <app-seleccionar-datos (onFinish)="handleDataFinish($event)" [json]="jsonData" [str]="stringData"></app-seleccionar-datos>
     </ng-container>
 
   </p-dialog>

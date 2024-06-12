@@ -9,6 +9,7 @@ export class DialogComponent {
   visible: boolean = false;
   showCargarArchivo: boolean = true;
   jsonData: any;
+  recargar: number | undefined;
   stringData: string | undefined;
 
 
@@ -20,5 +21,9 @@ export class DialogComponent {
     this.jsonData = event.json;
     this.stringData = event.str;
     this.showCargarArchivo = false;
+  }
+
+  handleDataFinish(event: { recargar: number }) {
+    this.recargar = event.recargar;
   }
 }

@@ -122,7 +122,7 @@ export class CargarArchivoComponent {
 
     const jsonData = this.datosExcel;
     const stringData = this.nombreProyecto;
-    console.log(jsonData);
+    // console.log(jsonData);
     this.onData.emit({ json: jsonData, str: stringData });
   }
 

@@ -20,6 +20,7 @@ import { DialogComponent } from './tabla/importar/dialog/dialog.component';
 import { CargarArchivoComponent } from './tabla/importar/cargar-archivo/cargar-archivo.component';
 import { SeleccionarDatosComponent } from './tabla/importar/seleccionar-datos/seleccionar-datos.component';
 import { ConfirmPopupModule } from 'primeng/confirmpopup';
+import { RecargarComponenteDirective } from './tabla/importar/directives/recargar-componente.directive';
 
 @NgModule({
   declarations: [
@@ -27,7 +28,8 @@ import { ConfirmPopupModule } from 'primeng/confirmpopup';
     DialogComponent,
     CargarArchivoComponent,
     DialogComponent,
-    SeleccionarDatosComponent
+    SeleccionarDatosComponent,
+    RecargarComponenteDirective
   ],
   imports: [
     BrowserModule,
