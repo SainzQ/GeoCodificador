@@ -8,10 +8,17 @@ table {
   align-items: center; /* Add this line */
   justify-content: flex-end; /* Add this line */
 }
-
 .custom-button {
-  margin: 0 0.5rem; /* Margin on the left and right of each button */
+  margin: 0 0.5rem; /* Margen en los lados de cada botón */
+  /* Tamaño de fuente más pequeño */
 }
+h4 {
+  white-space: nowrap; /* Evitar el salto de línea */
+   /* Ocultar el texto que se desborda */
+  text-overflow: ellipsis; /* Mostrar puntos suspensivos si el texto se desborda */
+  margin: 0; /* Eliminar márgenes para un mejor ajuste */
+}
+
 
 .p-input-icon-left {
   margin-left: auto; /* Add this line to push the search input field to the left */
@@ -20,9 +27,5 @@ table {
   display: flex;
   justify-content: flex-end; /* Alinea el contenido al final (derecha) */
   margin-top: 10px; /* Ajusta el margen superior si es necesario */
-}
-
-/* CSS personalizado */
-.custom-margin {
-  margin-right: 5px; /* Ajusta este valor según sea necesario */
+  font-size: 0.8rem; /* Tamaño de fuente más pequeño */
 }

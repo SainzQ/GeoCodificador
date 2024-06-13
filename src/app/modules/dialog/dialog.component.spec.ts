@@ -1,21 +1,17 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+<div class="card flex justify-content-center">
+  <p-button (click)="showDialog()" icon="pi pi-external-link" label="Importar"></p-button>
+  <p-dialog header="Crear proyecto" [(visible)]="visible" [modal]="true" [breakpoints]="{ '960px': '75vw' }"
+    [style]="{ width: '50vw', maxWidth: '1450px' }" [draggable]="false" [resizable]="true" [maximizable]="true">
 
-import { DialogComponent } from './dialog.component';
+    <!-- Componente Cargar Archivo -->
+    <ng-container *ngIf="showCargarArchivo">
+      <app-cargar-archivo (onData)="handleData($event)"></app-cargar-archivo>
+    </ng-container>
 
-describe('DialogComponent', () => {
-  let component: DialogComponent;
-  let fixture: ComponentFixture<DialogComponent>;
+    <!-- Componente Seleccionar Datos -->
+    <ng-container *ngIf="!showCargarArchivo">
+      <app-seleccionar-datos [json]="jsonData" [str]="stringData"></app-seleccionar-datos>
+    </ng-container>
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      declarations: [DialogComponent]
-    });
-    fixture = TestBed.createComponent(DialogComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-});
+  </p-dialog>
+</div>

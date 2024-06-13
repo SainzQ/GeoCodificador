@@ -1,24 +1,24 @@
 <table mat-table #table [dataSource]="dataSource">
 
-    <ng-container matColumnDef="id">
+    <!-- <ng-container matColumnDef="id">
         <th mat-header-cell *matHeaderCellDef>ID</th>
         <td mat-cell *matCellDef="let row">{{row.id}}</td>
-    </ng-container>
-    <ng-container matColumnDef="nombreproyecto">
-        <th mat-header-cell *matHeaderCellDef>Nombre del Proyecto</th>
-        <td mat-cell *matCellDef="let row">{{row.nombreproyecto}}</td>
-    </ng-container>
-    <ng-container matColumnDef="usuario">
+        </ng-container> -->
+    <ng-container matColumnDef="id_usuario">
         <th mat-header-cell *matHeaderCellDef>Usuario</th>
-        <td mat-cell *matCellDef="let row">{{row.usuario}}</td>
+        <td mat-cell *matCellDef="let row">{{row.id_usuario}}</td>
     </ng-container>
-    <ng-container matColumnDef="nregistros">
+    <ng-container matColumnDef="nombre">
+        <th mat-header-cell *matHeaderCellDef>Nombre del Proyecto</th>
+        <td mat-cell *matCellDef="let row">{{row.nombre}}</td>
+    </ng-container>
+    <ng-container matColumnDef="numero_registros">
         <th mat-header-cell *matHeaderCellDef>N. de Registros</th>
-        <td mat-cell *matCellDef="let row">{{row.nregistros}}</td>
+        <td mat-cell *matCellDef="let row">{{row.numero_registros}}</td>
     </ng-container>
-    <ng-container matColumnDef="rgeocodificacion">
+    <ng-container matColumnDef="resultado_proceso">
         <th mat-header-cell *matHeaderCellDef>Resultado de Geocodificación</th>
-        <td mat-cell *matCellDef="let row">{{row.rgeocodificacion}}</td>
+        <td mat-cell *matCellDef="let row">{{row.resultado_proceso}}</td>
         <!-- <td>
 <div class="card">
     <p-toast></p-toast>
@@ -27,17 +27,17 @@
         </td> -->
 
     </ng-container>
-    <ng-container matColumnDef="fechacrea">
+    <ng-container matColumnDef="fecha_creacion">
         <th mat-header-cell *matHeaderCellDef>Fecha de Creación</th>
-        <td mat-cell *matCellDef="let row">{{row.fechacrea | date: 'dd MM yyyy'}}</td>
+        <td mat-cell *matCellDef="let row">{{row.fecha_creacion | date: 'dd MM yyyy'}}</td>
     </ng-container>
-    <ng-container matColumnDef="fechageo">
+    <ng-container matColumnDef="fecha_geocodificacion">
         <th mat-header-cell *matHeaderCellDef>Fecha de Geocodificación</th>
-        <td mat-cell *matCellDef="let row">{{row.fechageo | date: 'dd MM yyyy'}}</td>
+        <td mat-cell *matCellDef="let row">{{row.fecha_geocodificacion | date: 'dd MM yyyy'}}</td>
     </ng-container>
-    <ng-container matColumnDef="estatus">
+    <ng-container matColumnDef="estatus_geocodificacion">
         <th mat-header-cell *matHeaderCellDef>Estatus de Geocodificación</th>
-        <td mat-cell *matCellDef="let row">{{row.estatus}}</td>
+        <td mat-cell *matCellDef="let row">{{row.estatus_geocodificacion}}</td>
     </ng-container>
     <!-- Add the header row and rows here -->
     <tr mat-header-row *matHeaderRowDef="tableDisplayColumns"></tr>

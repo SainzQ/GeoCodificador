@@ -30,7 +30,8 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import { TableModule as PrimeNgTableModule } from 'primeng/table';
 // For dynamic progressbar demo
 import { ToastModule } from 'primeng/toast';
-
+//service
+import { TableroService } from "../services/tablero.service";
 @NgModule({
     declarations: [
         TableComponent, 
@@ -70,6 +71,7 @@ import { ToastModule } from 'primeng/toast';
     ],
     providers: [
         MessageService,
+        TableroService
     ]
 })
 export class TableModule { }

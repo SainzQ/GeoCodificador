@@ -4,7 +4,7 @@ import { MatTableModule } from '@angular/material/table';
 import { TableModule } from './modules/table.module';
 import { AppRoutingModule } from './app-routing.module';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-
+import { HttpClientModule } from '@angular/common/http';
 import { AppComponent } from './app.component';
 import { CustomerComponent } from './pages/customers/customer.component';
 import { TableCustomersComponent } from './components/table-customers/table-customers.component';
@@ -23,6 +23,7 @@ import { TableCustomersComponent } from './components/table-customers/table-cust
     BrowserAnimationsModule,
     MatTableModule,
     TableModule,
+    HttpClientModule
   ],
   providers: [],
   bootstrap: [AppComponent]

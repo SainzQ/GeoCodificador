@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Output, ViewChild } from '@angular/core';
 import { NgModel } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { FileUploadEvent } from 'primeng/fileupload';
@@ -13,16 +13,21 @@ import * as XLSX from 'xlsx';
 
 export class CargarArchivoComponent {
 
-  nombreProyecto: string | undefined;
-  uploadedFiles: File[] = []; // tipo File
+  workbook: XLSX.WorkBook | null = null;
+  nombreProyecto: string = '';
+  uploadedFiles: File[] = [];
   botonSubirDeshabilitado = true;
+  dropdownDeshabilitado = true;
   hojasExcel: string[] = [];
+  hojaSeleccionada: string | undefined;
+  datosExcel: any[] = [];
+  botonSiguienteDeshabilitado = true;
 
-  @ViewChild('nombreProyectoInput') nombreProyectoInput!: NgModel; //Suscribirse al componente hijo
-
+  @ViewChild('nombreProyectoInput') nombreProyectoInput!: NgModel;
+  @ViewChild('dropdownHoja') dropdownHoja!: NgModel; //Suscribirse al componente hijo
+  @Output() onData = new EventEmitter<{ json: any, str: string }>();
 
   constructor(private messageService: MessageService) { }
-
 
   validarNombreProyecto() {
     const nombreProyecto = this.nombreProyecto?.trim(); //Quita espacios al inicio y al final
@@ -48,13 +53,13 @@ export class CargarArchivoComponent {
     }
 
     // console.log(this.nombreProyecto);
-    console.log(this.nombreProyectoInput.value);
+    // console.log(this.nombreProyectoInput.value);
 
     for (let file of event.files) {
       this.uploadedFiles.push(file);
       this.leerExcel(file);
     }
-
+    this.dropdownDeshabilitado = false;
     this.messageService.add({ severity: 'info', summary: 'Archivo cargado!', detail: '' });
   }
 
@@ -64,12 +69,61 @@ export class CargarArchivoComponent {
     fileReader.onload = () => {
       const data = new Uint8Array(fileReader.result as ArrayBuffer);
       const workbook = XLSX.read(data, { type: 'array' });
+      this.workbook = workbook;
       const sheet_name_list = workbook.SheetNames;
       this.hojasExcel = sheet_name_list;
-      console.log(this.hojasExcel);
+      this.botonSiguienteDeshabilitado = false;
+      //console.log(this.hojasExcel);
     };
 
     fileReader.readAsArrayBuffer(file);
+  }
+
+  obtenerDatosHojaEnJSON() {
+
+    const nombreProyecto = this.nombreProyecto?.trim();
+    const expresionRegular = /^[a-zA-Z0-9\s]+$/;
+
+    if (!nombreProyecto || !expresionRegular.test(nombreProyecto)) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Nombre de proyecto inválido',
+        detail: 'Por favor, ingrese un nombre de proyecto válido.'
+      });
+      this.nombreProyectoInput.control?.markAsDirty();
+      this.nombreProyectoInput.control?.markAsTouched();
+      return;
+    }
+
+    if (!this.hojaSeleccionada) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Hoja no seleccionada',
+        detail: 'Por favor, seleccione una hoja de Excel antes continuar.'
+      });
+      this.dropdownHoja.control?.markAsDirty();
+      return;
+    }
+
+    if (this.workbook && this.hojaSeleccionada) {
+      const worksheet = this.workbook.Sheets[this.hojaSeleccionada];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      this.datosExcel = jsonData;
+      //console.log(this.datosExcel);
+
+    } else {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error al obtener datos de hoja',
+        detail: 'Por favor, seleccione una hoja de Excel antes de obtener los datos o intente recargar la pagina.'
+      });
+      this.dropdownHoja.control?.markAsDirty();
+    }
+
+    const jsonData = this.datosExcel;
+    const stringData = this.nombreProyecto;
+    // console.log(jsonData);
+    this.onData.emit({ json: jsonData, str: stringData });
   }
 
 }

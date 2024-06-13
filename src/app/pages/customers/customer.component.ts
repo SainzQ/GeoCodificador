@@ -9,224 +9,123 @@ import { TableAction } from 'src/app/modules/table/models/table-action.model';
 import { TableColumn } from 'src/app/modules/table/models/table-column.model';
 import { TableConfig } from 'src/app/modules/table/models/table-config.model';
 
-const CUSTOMERS_DATA_MOCK = [
-        {
-            id: 1,
-            nombreproyecto: 'Mapa de Zonas Escolares',
-            usuario: 'usuario1',
-            nregistros: 200,
-            rgeocodificacion: '90%',
-            fechacrea: new Date(2023, 4, 20),
-            fechageo: new Date(2023, 4, 25),
-            estatus: 'Completo'
-        },
-        {
-            id: 2,
-            nombreproyecto: 'Centros de Salud',
-            usuario: 'usuario2',
-            nregistros: 150,
-            rgeocodificacion: '85%',
-            fechacrea: new Date(2023, 5, 10),
-            fechageo: new Date(2023, 5, 15),
-            estatus: 'Completo'
-        },
-        {
-            id: 3,
-            nombreproyecto: 'Red de Transporte',
-            usuario: 'usuario3',
-            nregistros: 300,
-            rgeocodificacion: '70%',
-            fechacrea: new Date(2023, 6, 5),
-            fechageo: new Date(2023, 6, 12),
-            estatus: 'En Proceso'
-        },
-        {
-            id: 4,
-            nombreproyecto: 'Áreas Verdes',
-            usuario: 'usuario4',
-            nregistros: 100,
-            rgeocodificacion: '95%',
-            fechacrea: new Date(2023, 3, 22),
-            fechageo: new Date(2023, 3, 29),
-            estatus: 'Completo'
-        },
-        {
-            id: 5,
-            nombreproyecto: 'Monitoreo de Calidad del Aire',
-            usuario: 'usuario5',
-            nregistros: 250,
-            rgeocodificacion: '80%',
-            fechacrea: new Date(2023, 7, 1),
-            fechageo: new Date(2023, 7, 8),
-            estatus: 'En Proceso'
-        },
-        {
-            id: 6,
-            nombreproyecto: 'Inventario de Alumbrado Público',
-            usuario: 'usuario6',
-            nregistros: 120,
-            rgeocodificacion: '92%',
-            fechacrea: new Date(2023, 2, 10),
-            fechageo: new Date(2023, 2, 17),
-            estatus: 'Completo'
-        },
-        {
-            id: 7,
-            nombreproyecto: 'Red de Agua Potable',
-            usuario: 'usuario7',
-            nregistros: 180,
-            rgeocodificacion: '88%',
-            fechacrea: new Date(2023, 1, 18),
-            fechageo: new Date(2023, 1, 25),
-            estatus: 'Completo'
-        },
-        {
-            id: 8,
-            nombreproyecto: 'Puntos de Reciclaje',
-            usuario: 'usuario8',
-            nregistros: 75,
-            rgeocodificacion: '78%',
-            fechacrea: new Date(2023, 9, 5),
-            fechageo: new Date(2023, 9, 12),
-            estatus: 'En Proceso'
-        },
-        {
-            id: 9,
-            nombreproyecto: 'Estaciones de Servicio',
-            usuario: 'usuario9',
-            nregistros: 90,
-            rgeocodificacion: '93%',
-            fechacrea: new Date(2023, 8, 20),
-            fechageo: new Date(2023, 8, 27),
-            estatus: 'Completo'
-        },
-        {
-            id: 10,
-            nombreproyecto: 'Rutas de Recolección de Basura',
-            usuario: 'usuario10',
-            nregistros: 130,
-            rgeocodificacion: '82%',
-            fechacrea: new Date(2023, 11, 1),
-            fechageo: new Date(2023, 11, 8),
-            estatus: 'En Proceso'
-        }
-    ];
-    
-
-
+const CUSTOMERS_DATA_MOCK: Customer[] = [
+  {
+    id_usuario: 1,
+    nombre: 'Mapa de Zonas Escolares',
+    resultado_proceso: 'Completo',
+    numero_registros: 200,
+    fecha_creacion: new Date(2023, 4, 20),
+    fecha_geocodificacion: new Date(2023, 4, 25),
+    estatus_geocodificacion: 'Completo'
+  },
+  {
+    id_usuario: 2,
+    nombre: 'Centros de Salud',
+    resultado_proceso: 'Completo',
+    numero_registros: 150,
+    fecha_creacion: new Date(2023, 5, 10),
+    fecha_geocodificacion: new Date(2023, 5, 15),
+    estatus_geocodificacion: 'Completo'
+  },
+  {
+    id_usuario: 3,
+    nombre: 'Red de Transporte',
+    resultado_proceso: 'En Proceso',
+    numero_registros: 300,
+    fecha_creacion: new Date(2023, 6, 5),
+    fecha_geocodificacion: new Date(2023, 6, 12),
+    estatus_geocodificacion: 'En Proceso'
+  },
+  // Resto de los datos...
+];
 
 @Component({
-    selector: 'app-customer',
-      templateUrl: './customer.component.html',
-    styleUrls: ['./customer.component.css'],
+  selector: 'app-customer',
+  templateUrl: './customer.component.html',
+  styleUrls: ['./customer.component.css'],
 })
-export class CustomerComponent implements OnInit{ 
-    customersList: Array<Customer> = [];
-    tableColumns: TableColumn[] = [];
-    tableConfig: TableConfig = {
-      isSelectable: true,
-      isPaginable: true,
-      showActions: true,
-      showFilter: true,
-    };  
-    isLoadingTable: boolean = true;
+export class CustomerComponent implements OnInit {
+  customersList: Customer[] = [];
+  tableColumns: TableColumn[] = [];
+  tableConfig: TableConfig = {
+    isSelectable: true,
+    isPaginable: true,
+    showActions: true,
+    showFilter: true,
+  };
+  isLoadingTable: boolean = true;
 
-    constructor (){}
+  constructor() {}
 
-    ngOnInit(): void {
-        this.setTableColumns();
-        setTimeout(() => {
-          this.customersList = CUSTOMERS_DATA_MOCK;
-          this.isLoadingTable = false
-        }, 5000)
-      }
+  ngOnInit(): void {
+    this.setTableColumns();
+    // Simulación de carga de datos
+    setTimeout(() => {
+      console.log('Setting customersList:', CUSTOMERS_DATA_MOCK); // Agrega este log para verificar los datos
+      this.customersList = CUSTOMERS_DATA_MOCK;
+      this.isLoadingTable = false;
+    }, 5000); // Tiempo de espera simulado de 5 segundos
+  }
 
-      setTableColumns() {
-        this.tableColumns = [
-          { label: 'ID', def: 'id', dataKey: 'id' },
-          { label: 'Nombre del Proyecto', def: 'nombreproyecto', dataKey: 'nombreproyecto' },
-          { label: 'Usuario', def: 'usuario', dataKey: 'usuario' },
-          { label: 'N. de Registros', def: 'nregistros', dataKey: 'nregistros' },
-          {
-            label: 'Resultado de Geocodificación',
-            def: 'rgeocodificacion',
-            dataKey: 'rgeocodificacion'
-          },
-          {
-            label: 'Fecha de Creación',
-            def: 'fechacrea',
-            dataKey: 'fechacrea',
-            dataType: 'date',
-            formatt: 'dd MMM yyyy',
-            controlType: 'date'
-          },
-          {
-            label: 'Fecha de Geocodificación',
-            def: 'fechageo',
-            dataKey: 'fechageo',
-            dataType: 'date',
-            formatt: 'dd MMM yyyy',
-            controlType: 'date'
-          },
-          {
-            label: 'Estatus de Geocodificación',
-            def: 'estatus',
-            dataKey: 'estatus',
-            controlType: 'select',
-            data: [
-              'Completo',
-              'En Proceso',
-              'Pendiente'
-            ]
-          }
-        ];
-      }
+  setTableColumns() {
+    this.tableColumns = [
+      { label: 'ID Usuario', def: 'id_usuario', dataKey: 'id_usuario' },
+      { label: 'Nombre del Proyecto', def: 'nombre', dataKey: 'nombre' },
+      { label: 'Resultado del Proceso', def: 'resultado_proceso', dataKey: 'resultado_proceso' },
+      { label: 'Número de Registros', def: 'numero_registros', dataKey: 'numero_registros' },
+      { label: 'Fecha de Creación', def: 'fecha_creacion', dataKey: 'fecha_creacion', dataType: 'date', formatt: 'dd MMM yyyy' },
+      { label: 'Fecha de Geocodificación', def: 'fecha_geocodificacion', dataKey: 'fecha_geocodificacion', dataType: 'date', formatt: 'dd MMM yyyy' },
+      { label: 'Estatus de Geocodificación', def: 'estatus_geocodificacion', dataKey: 'estatus_geocodificacion' },
+    ];
+  }
+
+  onSelect(data: any) {
+    console.log(data);
+  }
+
+  onTableAction(tableAction: TableAction) {
+    switch (tableAction.action) {
     
-      onSelect(data: any) {
-        console.log(data)
-      }
-      onTableAction(tableAction: TableAction) {
-        switch (tableAction.action) {
-          case TABLE_ACTION.EDIT:
-            this.onEdit(tableAction.row)
-            break;
-          case TABLE_ACTION.DELETE:
-            this.onDelete(tableAction.row)
-            break;
-          case TABLE_ACTION.SAVE:
-            this.onSave(tableAction.row)
-            break;
-    
-          default:
-            break;
-        }
-      }
-      onSave(newRow: Customer) {
-        this.isLoadingTable = true
-        timer(3000).subscribe(()=> {
-          this.isLoadingTable = false;
-          this.customersList = this.customersList.map(currentCustomer => currentCustomer. id === newRow.id ? newRow : currentCustomer)
-        });
-      }
-    
-      onEdit(customer: Customer) {
-        console.log('Edit', customer)
-      }
-      onDelete(customer: Customer) {
-        console.log('Delete', customer)
-    
-      }
-      onCreateNewFormGroup(row: any): FormGroup {
-        return new FormGroup({
-          id: new FormControl(row.id),
-          nombreproyecto: new FormControl(row.nombreproyecto),
-          usuario: new FormControl(row.usuario),
-          nregistros: new FormControl(row.nregistros),
-          rgeocodificacion: new FormControl(row.rgeocodificacion),
-          fechacrea: new FormControl(row.fechacrea),
-          fechageo: new FormControl(row.fechageo),
-          estatus: new FormControl(row.estatus)
-        });
-      }
+      case TABLE_ACTION.DELETE:
+        this.onDelete(tableAction.row);
+        break;
       
+      default:
+        break;
+    }
+  }
+
+  onSave(newRow: Customer) {
+    this.isLoadingTable = true;
+    // Simulación de guardado de datos con temporizador
+    timer(3000).subscribe(() => {
+      this.isLoadingTable = false;
+      this.customersList = this.customersList.map((currentCustomer) =>
+        currentCustomer.id_usuario === newRow.id_usuario ? newRow : currentCustomer
+      );
+    });
+  }
+
+  // onEdit(customer: Customer) {
+  //   console.log('Edit', customer);
+  // }
+
+  onDelete(customer: Customer) {
+    console.log('Delete', customer);
+    // Aquí iría la lógica para eliminar un cliente
+  }
+
+  // Método para crear un nuevo FormGroup basado en los datos de una fila
+  onCreateNewFormGroup(row: Customer): FormGroup {
+    return new FormGroup({
+      id_usuario: new FormControl(row.id_usuario),
+      nombre: new FormControl(row.nombre),
+      resultado_proceso: new FormControl(row.resultado_proceso),
+      numero_registros: new FormControl(row.numero_registros),
+      fecha_creacion: new FormControl(row.fecha_creacion),
+      fecha_geocodificacion: new FormControl(row.fecha_geocodificacion),
+      estatus_geocodificacion: new FormControl(row.estatus_geocodificacion),
+    });
+  }
 }

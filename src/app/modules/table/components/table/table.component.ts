@@ -46,12 +46,13 @@ export class TableComponent implements OnInit, AfterViewInit {
     @ViewChild(MatSort) matSort!: MatSort;
 
     @Input() set data(data: any[]) {
-        console.log('Setting data', data);
+        console.log('Data received in table component:', data); // Agrega este log para verificar los datos
         this.originalData = data;
         this.filteredData = data;
         this.updatePagedData();
         this.dataSource.sort = this.matSort;
     }
+    
 
     @Input() set columns(columns: TableColumn[]) {
         console.log('Setting columns', columns);
@@ -131,25 +132,14 @@ export class TableComponent implements OnInit, AfterViewInit {
         return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.position + 1}`;
     }
 
-    onEdit(row: any, index: number) {
-        this.isEditMode = true;
-        this.currentRowIndex = index;
-        this.formGroup = this.createNewFormGroup(row);
-        this.action.emit({ action: TABLE_ACTION.EDIT, row });
-    }
+   
 
     onCancel() {
         this.isEditMode = false;
         this.currentRowIndex = undefined;
     }
 
-    onSave() {
-        const newRow = this.formGroup.value;
-        console.log('NewRow', newRow);
-        this.action.emit({ action: TABLE_ACTION.SAVE, row: newRow });
-        this.isEditMode = false;
-        this.currentRowIndex = undefined;
-    }
+
 
     onDelete(row: any) {
         this.action.emit({ action: TABLE_ACTION.DELETE, row });
@@ -199,3 +189,4 @@ export class TableComponent implements OnInit, AfterViewInit {
         });
     }
 }
+

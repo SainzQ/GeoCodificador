@@ -1,5 +1,5 @@
 export enum TABLE_ACTION{
-    EDIT,
+    // EDIT,
     DELETE,
-    SAVE
+    // SAVE
     }

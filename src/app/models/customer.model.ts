@@ -1,10 +1,11 @@
 export interface Customer {
-    id: number;
-    nombreproyecto: string;
-    usuario: string;
-    nregistros: number;
-    rgeocodificacion: string;
-    fechacrea: Date;
-    fechageo: Date;
-    estatus: string;
-}
+    id_usuario: number;
+    nombre: string;
+    resultado_proceso: string;
+    numero_registros: number;
+    // rgeocodificacion: string;
+    fecha_creacion: Date;
+    fecha_geocodificacion: Date;
+    estatus_geocodificacion: string;
+  }
+  
