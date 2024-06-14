@@ -9,6 +9,7 @@ import { TABLE_ACTION } from '../../enums/table-action.enum';
 import { ColumnValuePipe } from '../../pipes/column-value.pipe';
 import { TableColumn } from '../../models/table-column.model';
 import { ConfirmationService, MessageService, ConfirmEventType } from 'primeng/api';
+import { TableroService } from 'src/app/services/tablero.service';
 
 @Component({
     selector: 'app-table',
@@ -19,7 +20,7 @@ import { ConfirmationService, MessageService, ConfirmEventType } from 'primeng/a
 export class TableComponent implements OnInit, AfterViewInit {
     dataSource: MatTableDataSource<any> = new MatTableDataSource();
     originalData: any[] = []; // Para mantener los datos originales
-    tableDisplayColumns: string[] = [];
+    tableDisplayColumns: string[] = ['id_usuario', 'nombre', 'numero_registros', 'resultado_proceso', 'fecha_creacion', 'fecha_geocodificacion', 'estatus_geocodificacion'];
     tableColumns: TableColumn[] = [];
     selection = new SelectionModel<any>(true, []);
     tableConfig: TableConfig | undefined;
@@ -30,32 +31,23 @@ export class TableComponent implements OnInit, AfterViewInit {
     value: number = 0;
     visible: boolean = false;
     first: number = 0;
-    rows: number = 10;
+    rows: number = 5;
     filteredData: any[] = [];
 
-    onPageChange(event: any) {
-        this.first = event.first;
-        this.rows = event.rows;
-        this.updatePagedData();
-    }
+    constructor(private confirmationService: ConfirmationService, private messageService: MessageService, private tableroService: TableroService) { }
 
-    showDialog() {
-        this.visible = true;
-    }
-
-    @ViewChild(MatSort) matSort!: MatSort;
-
+    @ViewChild(MatSort) sort!: MatSort;
     @Input() set data(data: any[]) {
-        console.log('Data received in table component:', data); // Agrega este log para verificar los datos
         this.originalData = data;
         this.filteredData = data;
         this.updatePagedData();
-        this.dataSource.sort = this.matSort;
+        if (this.sort) {
+            this.dataSource.sort = this.sort;
+        }
     }
-    
+
 
     @Input() set columns(columns: TableColumn[]) {
-        console.log('Setting columns', columns);
         this.tableColumns = columns;
         this.tableDisplayColumns = this.tableColumns.map((col) => col.def);
     }
@@ -72,28 +64,17 @@ export class TableComponent implements OnInit, AfterViewInit {
 
     private getColumnValue: ColumnValuePipe = new ColumnValuePipe();
 
-    constructor(private confirmationService: ConfirmationService, private messageService: MessageService) {
-        this.first = 0;
-        this.rows = 10;
-    }
-
     ngOnInit(): void {
-        let interval = setInterval(() => {
-            this.value = this.value + Math.floor(Math.random() * 10) + 1;
-            if (this.value >= 100) {
-                this.value = 100;
-                this.messageService.add({ severity: 'info', summary: 'Success', detail: 'Process Completed' });
-                clearInterval(interval);
-            }
-        }, 2000);
+        // this.getProyecto();
     }
 
     ngAfterViewInit(): void {
-        this.dataSource.sort = this.matSort;
+        this.dataSource.sort = this.sort;
         this.dataSource.sortingDataAccessor = (data, sortHeaderId) => {
             return this.getValue(data, sortHeaderId);
         };
     }
+
 
     onSelect() {
         this.select.emit(this.selection.selected);
@@ -104,9 +85,7 @@ export class TableComponent implements OnInit, AfterViewInit {
         if (this.tableConfig.isSelectable) {
             this.tableDisplayColumns.unshift('select');
         }
-        if (this.tableConfig.showActions) {
-            this.tableDisplayColumns.push('actions')
-        }
+
     }
 
     isAllSelected() {
@@ -132,14 +111,10 @@ export class TableComponent implements OnInit, AfterViewInit {
         return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.position + 1}`;
     }
 
-   
-
     onCancel() {
         this.isEditMode = false;
         this.currentRowIndex = undefined;
     }
-
-
 
     onDelete(row: any) {
         this.action.emit({ action: TABLE_ACTION.DELETE, row });
@@ -148,8 +123,8 @@ export class TableComponent implements OnInit, AfterViewInit {
     applyFilter(event: Event) {
         const filterValue = (event.target as HTMLInputElement).value;
         this.currentFilterValue = filterValue.trim().toLowerCase();
-        this.filteredData = this.originalData.filter(item => 
-            Object.values(item).some(val => 
+        this.filteredData = this.originalData.filter(item =>
+            Object.values(item).some(val =>
                 String(val).toLowerCase().includes(this.currentFilterValue)
             )
         );
@@ -165,7 +140,6 @@ export class TableComponent implements OnInit, AfterViewInit {
 
     getValue(row: any, columName: string): string | number {
         const column = this.tableColumns.find((col) => col.dataKey === columName) as TableColumn;
-
         if (column) {
             const value = this.getColumnValue.transform(row, column);
             if (typeof value === 'string' || typeof value === 'number') {
@@ -184,9 +158,18 @@ export class TableComponent implements OnInit, AfterViewInit {
                 this.messageService.add({ severity: 'success', summary: 'Aceptado', detail: 'Proyecto eliminado correctamente' });
             },
             reject: () => {
-                this.messageService.add({ severity: 'error', summary: 'Cancelado', detail: 'No se a eliminado el proyecto' });
+                this.messageService.add({ severity: 'error', summary: 'Cancelado', detail: 'No se ha eliminado el proyecto' });
             }
         });
     }
-}
 
+    onPageChange(event: any) {
+        this.first = event.first;
+        this.rows = event.rows;
+        this.updatePagedData();
+    }
+
+    showDialog() {
+        this.visible = true;
+    }
+}

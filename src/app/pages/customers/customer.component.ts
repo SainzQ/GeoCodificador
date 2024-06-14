@@ -8,37 +8,7 @@ import { TABLE_ACTION } from 'src/app/modules/table/enums/table-action.enum';
 import { TableAction } from 'src/app/modules/table/models/table-action.model';
 import { TableColumn } from 'src/app/modules/table/models/table-column.model';
 import { TableConfig } from 'src/app/modules/table/models/table-config.model';
-
-const CUSTOMERS_DATA_MOCK: Customer[] = [
-  {
-    id_usuario: 1,
-    nombre: 'Mapa de Zonas Escolares',
-    resultado_proceso: 'Completo',
-    numero_registros: 200,
-    fecha_creacion: new Date(2023, 4, 20),
-    fecha_geocodificacion: new Date(2023, 4, 25),
-    estatus_geocodificacion: 'Completo'
-  },
-  {
-    id_usuario: 2,
-    nombre: 'Centros de Salud',
-    resultado_proceso: 'Completo',
-    numero_registros: 150,
-    fecha_creacion: new Date(2023, 5, 10),
-    fecha_geocodificacion: new Date(2023, 5, 15),
-    estatus_geocodificacion: 'Completo'
-  },
-  {
-    id_usuario: 3,
-    nombre: 'Red de Transporte',
-    resultado_proceso: 'En Proceso',
-    numero_registros: 300,
-    fecha_creacion: new Date(2023, 6, 5),
-    fecha_geocodificacion: new Date(2023, 6, 12),
-    estatus_geocodificacion: 'En Proceso'
-  },
-  // Resto de los datos...
-];
+import { TableroService } from 'src/app/services/tablero.service';
 
 @Component({
   selector: 'app-customer',
@@ -52,20 +22,15 @@ export class CustomerComponent implements OnInit {
     isSelectable: true,
     isPaginable: true,
     showActions: true,
-    showFilter: true,
+    showFilter: true
   };
   isLoadingTable: boolean = true;
 
-  constructor() {}
+  constructor(private tableroService: TableroService) {}
 
   ngOnInit(): void {
     this.setTableColumns();
-    // Simulación de carga de datos
-    setTimeout(() => {
-      console.log('Setting customersList:', CUSTOMERS_DATA_MOCK); // Agrega este log para verificar los datos
-      this.customersList = CUSTOMERS_DATA_MOCK;
-      this.isLoadingTable = false;
-    }, 5000); // Tiempo de espera simulado de 5 segundos
+    this.loadCustomers();
   }
 
   setTableColumns() {
@@ -76,8 +41,22 @@ export class CustomerComponent implements OnInit {
       { label: 'Número de Registros', def: 'numero_registros', dataKey: 'numero_registros' },
       { label: 'Fecha de Creación', def: 'fecha_creacion', dataKey: 'fecha_creacion', dataType: 'date', formatt: 'dd MMM yyyy' },
       { label: 'Fecha de Geocodificación', def: 'fecha_geocodificacion', dataKey: 'fecha_geocodificacion', dataType: 'date', formatt: 'dd MMM yyyy' },
-      { label: 'Estatus de Geocodificación', def: 'estatus_geocodificacion', dataKey: 'estatus_geocodificacion' },
+      { label: 'Estatus de Geocodificación', def: 'estatus_geocodificacion', dataKey: 'estatus_geocodificacion' }
     ];
+  }
+
+  loadCustomers() {
+    this.isLoadingTable = true;
+    this.tableroService.getProyecto().subscribe(
+      response => {
+        this.customersList = response.response;
+        this.isLoadingTable = false;
+      },
+      error => {
+        console.log('Error al obtener proyectos', error);
+        this.isLoadingTable = false;
+      }
+    );
   }
 
   onSelect(data: any) {
@@ -86,11 +65,9 @@ export class CustomerComponent implements OnInit {
 
   onTableAction(tableAction: TableAction) {
     switch (tableAction.action) {
-    
       case TABLE_ACTION.DELETE:
         this.onDelete(tableAction.row);
         break;
-      
       default:
         break;
     }
@@ -99,7 +76,7 @@ export class CustomerComponent implements OnInit {
   onSave(newRow: Customer) {
     this.isLoadingTable = true;
     // Simulación de guardado de datos con temporizador
-    timer(3000).subscribe(() => {
+    timer(10000).subscribe(() => {
       this.isLoadingTable = false;
       this.customersList = this.customersList.map((currentCustomer) =>
         currentCustomer.id_usuario === newRow.id_usuario ? newRow : currentCustomer
@@ -107,16 +84,11 @@ export class CustomerComponent implements OnInit {
     });
   }
 
-  // onEdit(customer: Customer) {
-  //   console.log('Edit', customer);
-  // }
-
   onDelete(customer: Customer) {
     console.log('Delete', customer);
     // Aquí iría la lógica para eliminar un cliente
   }
 
-  // Método para crear un nuevo FormGroup basado en los datos de una fila
   onCreateNewFormGroup(row: Customer): FormGroup {
     return new FormGroup({
       id_usuario: new FormControl(row.id_usuario),

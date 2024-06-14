@@ -32,13 +32,15 @@ import { TableModule as PrimeNgTableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 //service
 import { TableroService } from "../services/tablero.service";
+import { RecargarComponenteDirective } from "../directives/recargar-componente.directive";
 @NgModule({
     declarations: [
         TableComponent, 
         ColumnValuePipe,
         CargarArchivoComponent,
         DialogComponent,
-        SeleccionarDatosComponent
+        SeleccionarDatosComponent,
+        RecargarComponenteDirective
     ],
     imports: [
         PrimeNgTableModule,

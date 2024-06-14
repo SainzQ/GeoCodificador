@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class TableroService {
-  private apiUrl = 'http://localhost:8081/api/proyectos/traerProyecto/2';
+  private apiUrl = 'http://192.168.40.1:5985/GCSW/api/proyectos/traerProyecto/1';
 
   constructor(private http: HttpClient) {}
 
