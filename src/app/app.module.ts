@@ -8,6 +8,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { AppComponent } from './app.component';
 import { CustomerComponent } from './pages/customers/customer.component';
 import { TableCustomersComponent } from './components/table-customers/table-customers.component';
+import { RecargarComponenteDirective } from './directives/recargar-componente.directive';
 
 
 
@@ -25,7 +26,7 @@ import { TableCustomersComponent } from './components/table-customers/table-cust
     TableModule,
     HttpClientModule
   ],
-  providers: [],
+  providers: [RecargarComponenteDirective],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

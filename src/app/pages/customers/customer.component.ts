@@ -26,7 +26,7 @@ export class CustomerComponent implements OnInit {
   };
   isLoadingTable: boolean = true;
 
-  constructor(private tableroService: TableroService) {}
+  constructor(private tableroService: TableroService) { }
 
   ngOnInit(): void {
     this.setTableColumns();
@@ -44,12 +44,16 @@ export class CustomerComponent implements OnInit {
       { label: 'Estatus de Geocodificación', def: 'estatus_geocodificacion', dataKey: 'estatus_geocodificacion' }
     ];
   }
-
   loadCustomers() {
     this.isLoadingTable = true;
     this.tableroService.getProyecto().subscribe(
       response => {
-        this.customersList = response.response;
+        this.customersList = response.response.map((project: any) => ({
+          ...project,
+          estatus_geocodificacion: project.estatus_geocodificacion === 'NG' ? 'En Proceso' :
+                                    project.estatus_geocodificacion === 'GC' ? 'Finalizado' : project.estatus_geocodificacion,
+          statusClass: project.estatus_geocodificacion === 'GC' ? 'green' : ''
+        }));
         this.isLoadingTable = false;
       },
       error => {
@@ -58,6 +62,7 @@ export class CustomerComponent implements OnInit {
       }
     );
   }
+  
 
   onSelect(data: any) {
     console.log(data);

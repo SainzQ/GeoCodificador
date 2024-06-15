@@ -10,8 +10,12 @@ table {
 }
 .custom-button {
   margin: 0 0.5rem; /* Margen en los lados de cada botón */
-  /* Tamaño de fuente más pequeño */
+  font-weight: 300; /* Hacer las letras más delgadas */
+  font-size: 0.9rem; /* Tamaño de fuente más pequeño */
+  font-family: Arial, sans-serif; /* Tipo de letra Arial */
 }
+
+
 h4 {
   white-space: nowrap; /* Evitar el salto de línea */
    /* Ocultar el texto que se desborda */
@@ -29,3 +33,55 @@ h4 {
   margin-top: 10px; /* Ajusta el margen superior si es necesario */
   font-size: 0.8rem; /* Tamaño de fuente más pequeño */
 }
+
+
+.centered-text {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.centered-text h2 {
+  text-align: center;
+  color: gainsboro; /* Color del texto */
+  font-size: 2.5rem; /* Tamaño de fuente ajustable */
+}
+
+.status-dot {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background-color: orange;
+  margin-right: 5px; /* Ajusta el espacio entre el punto y el texto según necesites */
+}
+/* .status-container {
+  display: flex;
+  align-items: center;
+} */
+
+.status-progress .p-progressbar-value {
+  height: 4px; /* Reducir la altura */
+  background-color: orange; /* Color de fondo de la barra de progreso */
+}
+
+.status-progress .p-progressbar-label {
+  font-size: 12px; /* Tamaño de la fuente del texto en la barra de progreso */
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  border-radius: 50%;
+}
+
+.green {
+  background-color: green;
+}
+
+
+/* .status-text {
+  font-size: 5px;
+  color: #333;
+} */

@@ -37,6 +37,8 @@ import { RecargarComponenteDirective } from "../directives/recargar-componente.d
     declarations: [
         TableComponent, 
         ColumnValuePipe,
+        
+        DialogComponent,
         CargarArchivoComponent,
         DialogComponent,
         SeleccionarDatosComponent,

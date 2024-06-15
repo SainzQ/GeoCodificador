@@ -10,7 +10,7 @@ export interface JsonObject {
   selector: 'app-seleccionar-datos',
   templateUrl: './seleccionar-datos.component.html',
   providers: [MessageService, ConfirmationService],
-  styleUrls: ['./seleccionar-datos.css']
+  styleUrls: ['./seleccionar-datos.component.css']
 })
 export class SeleccionarDatosComponent {
   @Input() json: JsonObject[] = [];
