@@ -25,3 +25,30 @@ Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To u
 ## Further help
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Proyecto manejado por modulos
+Tablero en el que mandar llamar la ventana de importar para hacer la funcion de geocodificar
+
+## Table.module.ts
+Este modulo tiene todas las importaciones necesarias que se hacen dentro de los modulos, como los modulos de primeng, angular material al igual que los component que se requieren para el desarrollo de la aplicacion 
+
+## app.module.ts
+En el modulo se manda llamar table.module.ts para hacer la integracion correcta de la aplicacion 
+
+## Dependencias
+
+## Primeng
+Se utilizó la versión ^16.9.1 de Primeng.
+
+## Angular Material
+Se utilizó la versión ^16.2.12 de Angular Material.
+
+## Servicio para el tablero
+  private apiUrl = 'http://192.168.40.1:5985/GCSW/api/proyectos/traerProyecto/1';
+En esta URL, {1} representa el ID del usuario que está realizando la geocodificación.
+
+## Servicio para el modulo de importar
+  private apiUrl = 'http://192.168.40.1:5985/GCSW/api/proyectos';
+
+

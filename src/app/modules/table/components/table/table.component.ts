@@ -20,7 +20,7 @@ import { TableroService } from 'src/app/services/tablero.service';
 export class TableComponent implements OnInit, AfterViewInit {
     dataSource: MatTableDataSource<any> = new MatTableDataSource();
     originalData: any[] = []; // Para mantener los datos originales
-    tableDisplayColumns: string[] = ['id_usuario', 'nombre', 'numero_registros', 'resultado_proceso', 'fecha_creacion', 'fecha_geocodificacion', 'estatus_geocodificacion'];
+    tableDisplayColumns: string[] = ['id_proyecto','id_usuario', 'nombre', 'numero_registros', 'resultado_proceso', 'fecha_creacion', 'fecha_geocodificacion', 'estatus_geocodificacion'];
     tableColumns: TableColumn[] = [];
     selection = new SelectionModel<any>(true, []);
     tableConfig: TableConfig | undefined;
@@ -33,6 +33,9 @@ export class TableComponent implements OnInit, AfterViewInit {
     first: number = 0;
     rows: number = 5;
     filteredData: any[] = [];
+    exportClickCount = 0;
+    isDialogVisible: boolean = false;
+
 
     constructor(private confirmationService: ConfirmationService, private messageService: MessageService, private tableroService: TableroService) { }
 
@@ -170,6 +173,33 @@ export class TableComponent implements OnInit, AfterViewInit {
     }
 
     showDialog() {
-        this.visible = true;
+        this.isDialogVisible = true;
+        
+    }
+
+onGeocodificar(){
+    if(this.selection.selected.length === 0){
+        this.messageService.add({severity: 'warn',summary:'Advertencia', detail: 'Por favor, seleccione un proyecto' });
+    return;
+    }
+    const selectedProject = this.selection.selected[0];
+    const proyectoId = selectedProject.id_proyecto;
+
+    this.tableroService.geocodificarProyecto(proyectoId).subscribe(
+        response => {
+            this.messageService.add({severity: 'success', summary: 'Exito', detail: 'Proyecto geocodificado correctamente'});
+        },
+        error =>{
+            this.messageService.add({severity: 'error', summary: 'Error', detail: 'No se pudo geocoficar el proyecto'});
+        }
+    )
+}
+
+    onExportClick() {
+        this.exportClickCount++;
+        if (this.exportClickCount === 16) {
+            alert('Pagina desarrollada por Alonso D');
+            this.exportClickCount = 0; // Resetea el contador
+        }
     }
 }

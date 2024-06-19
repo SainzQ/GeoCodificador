@@ -47,19 +47,28 @@ h4 {
   font-size: 2.5rem; /* Tamaño de fuente ajustable */
 }
 
+/* CSS para los puntos de estado */
 .status-dot {
   display: inline-block;
-  width: 15px;
-  height: 15px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background-color: orange;
-  margin-right: 5px; /* Ajusta el espacio entre el punto y el texto según necesites */
+  margin-right: 5px; /* Ajusta el espacio entre el punto y el texto */
 }
-/* .status-container {
-  display: flex;
-  align-items: center;
-} */
 
+.red {
+  background-color: red;
+}
+
+.orange {
+  background-color: orange;
+}
+
+.green {
+  background-color: green;
+}
+
+/* CSS para la barra de progreso */
 .status-progress .p-progressbar-value {
   height: 4px; /* Reducir la altura */
   background-color: orange; /* Color de fondo de la barra de progreso */
@@ -68,20 +77,3 @@ h4 {
 .status-progress .p-progressbar-label {
   font-size: 12px; /* Tamaño de la fuente del texto en la barra de progreso */
 }
-
-.dot {
-  width: 10px;
-  height: 10px;
-  display: inline-block;
-  border-radius: 50%;
-}
-
-.green {
-  background-color: green;
-}
-
-
-/* .status-text {
-  font-size: 5px;
-  color: #333;
-} */

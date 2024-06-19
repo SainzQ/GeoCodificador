@@ -6,7 +6,7 @@ import { Component } from '@angular/core';
   styleUrls: ['./dialog.component.css']
 })
 export class DialogComponent {
-  visible: boolean = false;
+  visible: boolean = true;
   showCargarArchivo: boolean = true;
   jsonData: any;
   recargar: number | undefined;
@@ -24,8 +24,6 @@ export class DialogComponent {
     console.log(this.jsonData);
     console.log(this.stringData);
     console.log(this.showCargarArchivo);
-    
-
     
   }
 

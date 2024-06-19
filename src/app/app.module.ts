@@ -9,6 +9,7 @@ import { AppComponent } from './app.component';
 import { CustomerComponent } from './pages/customers/customer.component';
 import { TableCustomersComponent } from './components/table-customers/table-customers.component';
 import { RecargarComponenteDirective } from './directives/recargar-componente.directive';
+// import { ModulesComponent } from './app/modules/modules.component';
 
 
 
@@ -17,6 +18,7 @@ import { RecargarComponenteDirective } from './directives/recargar-componente.di
     AppComponent,
     CustomerComponent,
     TableCustomersComponent,
+    // ModulesComponent,
   ],
   imports: [
     BrowserModule,
