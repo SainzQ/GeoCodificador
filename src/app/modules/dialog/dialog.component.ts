@@ -21,10 +21,10 @@ export class DialogComponent {
     this.jsonData = event.json;
     this.stringData = event.str;
     this.showCargarArchivo = false;
-    console.log(this.jsonData);
-    console.log(this.stringData);
-    console.log(this.showCargarArchivo);
-    
+    // console.log(this.jsonData);
+    // console.log(this.stringData);
+    // console.log(this.showCargarArchivo);
+
   }
 
   handleDataFinish(event: { recargar: number }) {

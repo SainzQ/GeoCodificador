@@ -173,8 +173,8 @@ export class TableComponent implements OnInit, AfterViewInit {
     }
 
     showDialog() {
-        this.isDialogVisible = true;
-        
+      this.visible = true;
+
     }
 
 onGeocodificar(){

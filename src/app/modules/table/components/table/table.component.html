@@ -1,136 +1,135 @@
 <div style="position: relative;">
-    <div *ngIf="isLoading"
-        style="display: flex; justify-content: center; align-items: center; position: absolute; top: 0; right: 0; left: 0; bottom: 0; background-color: #cecece66; z-index: 1;">
-        <p-progressSpinner></p-progressSpinner>
+  <div *ngIf="isLoading"
+    style="display: flex; justify-content: center; align-items: center; position: absolute; top: 0; right: 0; left: 0; bottom: 0; background-color: #cecece66; z-index: 1;">
+    <p-progressSpinner></p-progressSpinner>
+  </div>
+  <div class="centered-text">
+    <h2>SMART ADRESS DATA PROCESS</h2>
+  </div>
+  <!-- Botones  -->
+  <div class="card d-flex justify-content-end ">
+    <h4>Proyectos Almacenados</h4>
+    <!-- Toast and ConfirmPopup for notifications and confirmations -->
+    <p-toast></p-toast>
+    <p-confirmPopup></p-confirmPopup>
+    <!-- Buttons for different actions with custom class -->
+    <p-button size="small" class="custom-button px-2" label="Importar" (click)="showDialog()"
+      icon="pi pi-cloud-download"></p-button>
+    <!-- Dialog for file upload -->
+    <!-- <div class="card flex justify-content-center"> -->
+      <p-dialog header="Crear proyecto" [(visible)]="visible" [modal]="true" [breakpoints]="{ '960px': '75vw' }"
+        [style]="{ width: '50vw', maxWidth: '1450px' }" [draggable]="false" [resizable]="true" [maximizable]="true">
+        <app-dialog></app-dialog>
+      </p-dialog>
+    <!-- </div> -->
+    <!-- </p-dialog> -->
+    <p-button size="small" class="custom-button" label="Estandarizar" icon="pi pi-chart-bar"></p-button>
+    <p-button size="small" class="custom-button" label="Geocodificar" icon="pi pi-globe"
+      (click)="onGeocodificar"></p-button>
+    <!-- Aplicación de la clase personalizada al botón de "Exportar" -->
+    <p-button size="small" class="custom-button custom-margin" icon="pi pi-cloud-upload" label="Exportar"
+      (click)="onExportClick()"></p-button>
+    <!-- Search input field -->
+    <div *ngIf="tableConfig?.showFilter" class="p-input-icon-left">
+      <i class="pi pi-search"></i>
+      <input type="text" class="p-inputtext px-2" placeholder="Buscar..." matInput (keyup)="applyFilter($event)"
+        #input />
     </div>
-    <div class="centered-text">
-        <h2>SMART ADRESS DATA PROCESS</h2>
-    </div>
-        <!-- Botones  -->
-    <div class="card d-flex justify-content-end ">
-        <h4>Proyectos Almacenados</h4>
-        <!-- Toast and ConfirmPopup for notifications and confirmations -->
-        <p-toast></p-toast>
-        <p-confirmPopup></p-confirmPopup>
-        <!-- Buttons for different actions with custom class -->
-        <p-button size="small" class="custom-button px-2" label="Importar" (click)="showDialog()"
-            icon="pi pi-cloud-download"></p-button>
-        <!-- Dialog for file upload -->
-        <!-- <p-dialog header="Crear proyecto" [(visible)]="visible" [modal]="true" [breakpoints]="{ '960px': '75vw' }" -->
-            <!-- [style]="{ width: '50vw', maxWidth: '1450px' }" [draggable]="false" [resizable]="true" [maximizable]="true"> -->
-            <app-dialog *ngIf="isDialogVisible"></app-dialog>
+    <!-- Delete button with custom class -->
+    <p-button size="small" class="custom-button" (click)="eliminar($event)" label="Eliminar" icon="pi pi-trash"
+      severity="danger"></p-button>
+  </div>
 
-        <!-- </p-dialog> -->
-        <p-button size="small" class="custom-button" label="Estandarizar" icon="pi pi-chart-bar"></p-button>
-        <p-button size="small" class="custom-button" label="Geocodificar" icon="pi pi-globe" (click)="onGeocodificar"></p-button>
-        <!-- Aplicación de la clase personalizada al botón de "Exportar" -->
-        <p-button size="small" class="custom-button custom-margin" icon="pi pi-cloud-upload" label="Exportar" (click)="onExportClick()"></p-button>
-        <!-- Search input field -->
-        <div *ngIf="tableConfig?.showFilter" class="p-input-icon-left">
-            <i class="pi pi-search"></i>
-            <input type="text" class="p-inputtext px-2" placeholder="Buscar..." matInput (keyup)="applyFilter($event)"
-                #input />
-        </div>
-        <!-- Delete button with custom class -->
-        <p-button size="small" class="custom-button" (click)="eliminar($event)" label="Eliminar" icon="pi pi-trash"
-            severity="danger"></p-button>
-    </div>
+  <!-- Table -->
+  <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+    <!-- Checkbox -->
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef>
+        <mat-checkbox (change)="$event ? toggleAllRows() : null" [checked]="selection.hasValue() && isAllSelected()"
+          [indeterminate]="selection.hasValue() && !isAllSelected()" [aria-label]="checkboxLabel()">
+        </mat-checkbox>
+      </th>
+      <td mat-cell *matCellDef="let row">
+        <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null; onSelect()"
+          [checked]="selection.isSelected(row)" [aria-label]="checkboxLabel(row)">
+        </mat-checkbox>
+      </td>
+    </ng-container>
 
-    <!-- Table -->
-    <table mat-table 
-    [dataSource]="dataSource"
-     matSort
-      class="mat-elevation-z8">
-        <!-- Checkbox -->
-        <ng-container matColumnDef="select">
-            <th mat-header-cell *matHeaderCellDef>
-                <mat-checkbox (change)="$event ? toggleAllRows() : null"
-                    [checked]="selection.hasValue() && isAllSelected()"
-                    [indeterminate]="selection.hasValue() && !isAllSelected()" [aria-label]="checkboxLabel()">
-                </mat-checkbox>
-            </th>
-            <td mat-cell *matCellDef="let row">
-                <mat-checkbox (click)="$event.stopPropagation()"
-                    (change)="$event ? selection.toggle(row) : null; onSelect()" [checked]="selection.isSelected(row)"
-                    [aria-label]="checkboxLabel(row)">
-                </mat-checkbox>
-            </td>
+    <!-- Actions Column -->
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let row; let i = index">
+        <ng-container *ngIf="isEditMode && currentRowIndex === i; else viewMode">
         </ng-container>
+        <ng-template #viewMode>
+        </ng-template>
+      </td>
+    </ng-container>
 
-        <!-- Actions Column -->
-        <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef></th>
-            <td mat-cell *matCellDef="let row; let i = index">
-                <ng-container *ngIf="isEditMode && currentRowIndex === i; else viewMode">
-                </ng-container>
-                <ng-template #viewMode>
-                </ng-template>
-            </td>
+    <!-- Table Columns -->
+    <ng-container matColumnDef="id_proyecto">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
+      <td mat-cell *matCellDef="let row">{{ row.id_proyecto }}</td>
+    </ng-container>
+    <ng-container matColumnDef="nombre">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Nombre del Proyecto</th>
+      <td mat-cell *matCellDef="let row">{{ row.nombre }}</td>
+    </ng-container>
+    <ng-container matColumnDef="id_usuario">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Usuario</th>
+      <td mat-cell *matCellDef="let row">{{ row.id_usuario }}</td>
+    </ng-container>
+    <ng-container matColumnDef="numero_registros">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>N. de Registros</th>
+      <td mat-cell *matCellDef="let row">{{ row.numero_registros }}</td>
+    </ng-container>
+    <ng-container matColumnDef="resultado_proceso">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Resultado de Geocodificación</th>
+      <td mat-cell *matCellDef="let row">
+        <ng-container *ngIf="row.resultado_proceso === 'NG'">
+          <div class="status-container">
+            <p-progressBar mode="indeterminate" styleClass="status-progress"></p-progressBar>
+            <!-- <span class="status-text">En Proceso</span>   -->
+          </div>
         </ng-container>
+        <ng-container *ngIf="row.resultado_proceso !== 'NG'">
+          {{ row.resultado_proceso }}
+        </ng-container>
+      </td>
+    </ng-container>
 
-        <!-- Table Columns -->
-        <ng-container matColumnDef="id_proyecto">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
-            <td mat-cell *matCellDef="let row">{{ row.id_proyecto }}</td> 
-        </ng-container>
-        <ng-container matColumnDef="nombre">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Nombre del Proyecto</th>
-            <td mat-cell *matCellDef="let row">{{ row.nombre }}</td>
-        </ng-container>
-        <ng-container matColumnDef="id_usuario">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Usuario</th>
-            <td mat-cell *matCellDef="let row">{{ row.id_usuario }}</td>
-        </ng-container>
-        <ng-container matColumnDef="numero_registros">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>N. de Registros</th>
-            <td mat-cell *matCellDef="let row">{{ row.numero_registros }}</td>
-        </ng-container>
-        <ng-container matColumnDef="resultado_proceso">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Resultado de Geocodificación</th>
-            <td mat-cell *matCellDef="let row">
-                <ng-container *ngIf="row.resultado_proceso === 'NG'">
-                    <div class="status-container">
-                        <p-progressBar mode="indeterminate" styleClass="status-progress"></p-progressBar>
-                        <!-- <span class="status-text">En Proceso</span>   -->
-                    </div>
-                </ng-container>
-                <ng-container *ngIf="row.resultado_proceso !== 'NG'">
-                    {{ row.resultado_proceso }}
-                </ng-container>
-            </td>
-        </ng-container>
-        
-        <ng-container matColumnDef="fecha_creacion">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha de Creación</th>
-            <td mat-cell *matCellDef="let row">{{ row.fecha_creacion | date: 'dd MM yyyy' }}</td>
-        </ng-container>
-        <ng-container matColumnDef="fecha_geocodificacion">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha de Geocodificación</th>
-            <td mat-cell *matCellDef="let row">{{ row.fecha_geocodificacion | date: 'dd MM yyyy' }}</td>
-        </ng-container>
-        <ng-container matColumnDef="estatus_geocodificacion">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Estatus de Geocodificación</th>
-            <td mat-cell *matCellDef="let row">
-              <span class="status-dot" [ngClass]="row.statusClass"></span>
-              {{ row.estatus_geocodificacion }}
-            </td>
-          </ng-container>
-          
+    <ng-container matColumnDef="fecha_creacion">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha de Creación</th>
+      <td mat-cell *matCellDef="let row">{{ row.fecha_creacion | date: 'dd MM yyyy' }}</td>
+    </ng-container>
+    <ng-container matColumnDef="fecha_geocodificacion">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha de Geocodificación</th>
+      <td mat-cell *matCellDef="let row">{{ row.fecha_geocodificacion | date: 'dd MM yyyy' }}</td>
+    </ng-container>
+    <ng-container matColumnDef="estatus_geocodificacion">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Estatus de Geocodificación</th>
+      <td mat-cell *matCellDef="let row">
+        <span class="status-dot" [ngClass]="row.statusClass"></span>
+        {{ row.estatus_geocodificacion }}
+      </td>
+    </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="tableDisplayColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: tableDisplayColumns;"></tr>
-        <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell" [colSpan]="tableDisplayColumns.length">
-                No se encontró ningún resultado que coincida con la búsqueda "{{ currentFilterValue }}"
-            </td>
-        </tr>
-    </table>
-    
-    <div class="paginator-container">
-        <ng-container *ngIf="tableConfig?.isPaginable">
-            <p-paginator *ngIf="tableConfig?.isPaginable" (onPageChange)="onPageChange($event)" [first]="first"
-                [rows]="rows" [totalRecords]="filteredData.length" [rowsPerPageOptions]="[5, 10, 20]">
-            </p-paginator>
-        </ng-container>
-    </div>
+
+    <tr mat-header-row *matHeaderRowDef="tableDisplayColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: tableDisplayColumns;"></tr>
+    <tr class="mat-row" *matNoDataRow>
+      <td class="mat-cell" [colSpan]="tableDisplayColumns.length">
+        No se encontró ningún resultado que coincida con la búsqueda "{{ currentFilterValue }}"
+      </td>
+    </tr>
+  </table>
+
+  <div class="paginator-container">
+    <ng-container *ngIf="tableConfig?.isPaginable">
+      <p-paginator *ngIf="tableConfig?.isPaginable" (onPageChange)="onPageChange($event)" [first]="first" [rows]="rows"
+        [totalRecords]="filteredData.length" [rowsPerPageOptions]="[5, 10, 20]">
+      </p-paginator>
+    </ng-container>
+  </div>
 </div>

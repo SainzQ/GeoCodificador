@@ -4,8 +4,8 @@ import { CustomerComponent } from './pages/customers/customer.component';
 
 
 const routes: Routes = [
-  { path: 'customers', component: CustomerComponent },
-  { path: '**', redirectTo: 'customers' },
+  { path: 'menu', component: CustomerComponent },
+  { path: '**', redirectTo: 'menu' },
 ];
 
 @NgModule({
