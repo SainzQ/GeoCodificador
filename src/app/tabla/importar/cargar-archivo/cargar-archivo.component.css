@@ -1,0 +1,36 @@
+.file-upload-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 190px;
+}
+
+.upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.upload-icon {
+  font-size: 200px;
+}
+
+.color {
+  background-color: #363062;
+  padding: 20px;
+}
+
+.upload-container p {
+  margin-top: 0;
+}
+
+.upload-container h3 {
+  margin-bottom: 0.25rem;
+}
+
+.container-hcalculo {
+  width: 100%;
+  padding-top: 20px;
+  display: flex;
+  justify-content: space-between;
+}
