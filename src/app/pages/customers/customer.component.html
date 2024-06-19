@@ -1,0 +1,5 @@
+ <section>
+  <app-table [data]="customersList" [columns]="tableColumns" [config]="tableConfig"
+    [createNewFormGroup]="onCreateNewFormGroup" [isLoading]="isLoadingTable" (select)="onSelect($event)"
+    (action)="onTableAction($event)" ></app-table>
+</section> 
