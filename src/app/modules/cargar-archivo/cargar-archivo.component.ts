@@ -52,8 +52,8 @@ export class CargarArchivoComponent {
       return;
     }
 
-     console.log(this.nombreProyecto);
-     console.log(this.nombreProyectoInput.value);
+    //  console.log(this.nombreProyecto);
+    //  console.log(this.nombreProyectoInput.value);
 
     for (let file of event.files) {
       this.uploadedFiles.push(file);
@@ -109,7 +109,7 @@ export class CargarArchivoComponent {
       const worksheet = this.workbook.Sheets[this.hojaSeleccionada];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
       this.datosExcel = jsonData;
-      console.log(this.datosExcel);
+      // console.log(this.datosExcel);
 
     } else {
       this.messageService.add({
@@ -122,7 +122,7 @@ export class CargarArchivoComponent {
 
     const jsonData = this.datosExcel;
     const stringData = this.nombreProyecto;
-    console.log(jsonData);
+    // console.log(jsonData);
     this.onData.emit({ json: jsonData, str: stringData });
   }
 
