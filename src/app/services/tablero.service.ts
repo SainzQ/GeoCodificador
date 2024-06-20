@@ -18,13 +18,13 @@ export class TableroService {
     const url = 'http://192.168.40.1:5985/GCSW/api/proyectos/geocodificar';
     return this.http.post<any>(url, { id_proyecto });
   }
-  
+
   eliminarProyecto(id_proyecto: number): Observable<any> {
     const url = `http://192.168.40.1:5985/GCSW/api/proyectos/eliminar/${id_proyecto}`;
     return this.http.put<any>(url, {});
   }
-  
-  
+
+
 
 }
 
