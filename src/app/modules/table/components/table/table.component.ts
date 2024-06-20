@@ -10,6 +10,7 @@ import { ColumnValuePipe } from '../../pipes/column-value.pipe';
 import { TableColumn } from '../../models/table-column.model';
 import { ConfirmationService, MessageService, ConfirmEventType } from 'primeng/api';
 import { TableroService } from 'src/app/services/tablero.service';
+import { map } from 'rxjs/operators';
 
 @Component({
     selector: 'app-table',
@@ -19,7 +20,7 @@ import { TableroService } from 'src/app/services/tablero.service';
 })
 export class TableComponent implements OnInit, AfterViewInit {
     dataSource: MatTableDataSource<any> = new MatTableDataSource();
-    originalData: any[] = []; // Para mantener los datos originales
+    originalData: any[] = []; 
     tableDisplayColumns: string[] = ['id_proyecto', 'id_usuario', 'nombre', 'numero_registros', 'resultado_proceso', 'fecha_creacion', 'fecha_geocodificacion', 'estatus_geocodificacion'];
     tableColumns: TableColumn[] = [];
     selection = new SelectionModel<any>(true, []);
@@ -36,8 +37,9 @@ export class TableComponent implements OnInit, AfterViewInit {
     exportClickCount = 0;
     isDialogVisible: boolean = false;
 
-
-    constructor(private confirmationService: ConfirmationService, private messageService: MessageService, private tableroService: TableroService) { }
+    constructor(private confirmationService: ConfirmationService, 
+                private messageService: MessageService, 
+                private tableroService: TableroService) { }
 
     @ViewChild(MatSort) sort!: MatSort;
     @Input() set data(data: any[]) {
@@ -48,7 +50,6 @@ export class TableComponent implements OnInit, AfterViewInit {
             this.dataSource.sort = this.sort;
         }
     }
-
 
     @Input() set columns(columns: TableColumn[]) {
         this.tableColumns = columns;
@@ -78,7 +79,6 @@ export class TableComponent implements OnInit, AfterViewInit {
         };
     }
 
-
     onSelect() {
         this.select.emit(this.selection.selected);
     }
@@ -88,7 +88,6 @@ export class TableComponent implements OnInit, AfterViewInit {
         if (this.tableConfig.isSelectable) {
             this.tableDisplayColumns.unshift('select');
         }
-
     }
 
     isAllSelected() {
@@ -152,20 +151,6 @@ export class TableComponent implements OnInit, AfterViewInit {
         return '';
     }
 
-    eliminar(event: Event) {
-        this.confirmationService.confirm({
-            target: event.target as EventTarget,
-            message: '¿Estas seguro que quieres eliminar el registro?, Esta acción sera irreversible',
-            icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                this.messageService.add({ severity: 'success', summary: 'Aceptado', detail: 'Proyecto eliminado correctamente' });
-            },
-            reject: () => {
-                this.messageService.add({ severity: 'error', summary: 'Cancelado', detail: 'No se ha eliminado el proyecto' });
-            }
-        });
-    }
-
     onPageChange(event: any) {
         this.first = event.first;
         this.rows = event.rows;
@@ -176,48 +161,80 @@ export class TableComponent implements OnInit, AfterViewInit {
         this.visible = true;
     }
 
-    onGeocodificar() {
+    onGeocodificar(event: Event) {
         if (this.selection.selected.length === 0) {
             this.messageService.add({ severity: 'warn', summary: 'Advertencia', detail: 'Por favor, seleccione un proyecto' });
             return;
         }
+
         const selectedProject = this.selection.selected[0];
         const proyectoId = selectedProject.id_proyecto;
+        // const estatusGeocodificacion = selectedProject.estatus_geocodificacion;
 
-        this.tableroService.geocodificarProyecto(proyectoId).subscribe(
-            response => {
-                this.messageService.add({ severity: 'success', summary: 'Exito', detail: 'Proyecto geocodificado correctamente' });
+        // if (estatusGeocodificacion === 'PG') {
+        //     this.messageService.add({ severity: 'warn', summary: 'Advertencia', detail: 'El proyecto ya está en proceso de geocodificación' });
+        //     return;
+        // } else if (estatusGeocodificacion === 'GC') {
+        //     this.messageService.add({ severity: 'warn', summary: 'Advertencia', detail: 'El proyecto ya ha sido geocodificado' });
+        //     return;
+        // }
+
+        this.confirmationService.confirm({
+            target: event.target as EventTarget,
+            message: '¿Está seguro de geocodificar el proyecto?',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                this.tableroService.geocodificarProyecto(proyectoId).subscribe(
+                    response => {
+                        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Proyecto geocodificado correctamente' });
+                        window.location.reload();
+                    },
+                    error => {
+                        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo geocodificar el proyecto' });
+                    }
+                );
             },
-            error => {
-                this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo geocoficar el proyecto' });
+            reject: () => {
+                this.messageService.add({ severity: 'info', summary: 'Cancelado', detail: 'No se geocodificó el proyecto' });
             }
-        )
+        });
     }
 
-    onEliminar() {
+    onEliminar(event: Event) {
         if (this.selection.selected.length === 0) {
             this.messageService.add({ severity: 'warn', summary: 'Advertencia', detail: 'Por favor, seleccione un proyecto' });
             return;
         }
+
         const selectedProject = this.selection.selected[0];
         const proyectoId = selectedProject.id_proyecto;
-    
-        this.tableroService.eliminarProyecto(proyectoId).subscribe(
-            response => {
-                this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Proyecto eliminado correctamente' });
+
+        this.confirmationService.confirm({
+            target: event.target as EventTarget,
+            message: '¿Estas seguro que quieres eliminar el registro? Esta acción será irreversible.',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                this.tableroService.eliminarProyecto(proyectoId).subscribe(
+                    response => {
+                        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Proyecto eliminado correctamente' });
+                        window.location.reload();
+                    },
+                    error => {
+                        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el proyecto' });
+                    }
+                );
             },
-            error => {
-                this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el proyecto' });
+            reject: () => {
+                this.messageService.add({ severity: 'info', summary: 'Cancelado', detail: 'No se ha eliminado el proyecto' });
             }
-        );
+        });
     }
-    
 
     onExportClick() {
         this.exportClickCount++;
         if (this.exportClickCount === 16) {
             alert('Pagina desarrollada por Alonso D');
-            this.exportClickCount = 0; // Resetea el contador
+            this.exportClickCount = 0; 
         }
     }
 }

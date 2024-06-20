@@ -52,13 +52,11 @@ export class CustomerComponent implements OnInit {
         this.customersList = response.response.map((project: any) => ({
           ...project,
           estatus_geocodificacion: project.estatus_geocodificacion === 'NG' ? 'Pendiente' :
-
             project.estatus_geocodificacion === 'PG' ? 'En Proceso' :
-
-
-              project.estatus_geocodificacion === 'GC' ? 'Finalizado' : project.estatus_geocodificacion,
+            project.estatus_geocodificacion === 'GC' ? 'Finalizado' : project.estatus_geocodificacion,
           statusClass: project.estatus_geocodificacion === 'GC' ? 'green' :
-            project.estatus_geocodificacion === 'NG' ? 'red' : ''
+            project.estatus_geocodificacion === 'NG' ? 'red' :
+            project.estatus_geocodificacion === 'PG' ? 'orange' : ''
         }));
         this.isLoadingTable = false;
       },
@@ -68,21 +66,13 @@ export class CustomerComponent implements OnInit {
       }
     );
   }
-
+  
 
   onSelect(data: any) {
     console.log(data);
   }
 
-  onTableAction(tableAction: TableAction) {
-    switch (tableAction.action) {
-      case TABLE_ACTION.DELETE:
-        this.onDelete(tableAction.row);
-        break;
-      default:
-        break;
-    }
-  }
+  
 
   onSave(newRow: Customer) {
     this.isLoadingTable = true;
@@ -95,10 +85,6 @@ export class CustomerComponent implements OnInit {
     });
   }
 
-  onDelete(customer: Customer) {
-    console.log('Delete', customer);
-    // Aquí iría la lógica para eliminar un cliente
-  }
 
   onCreateNewFormGroup(row: Customer): FormGroup {
     return new FormGroup({
