@@ -20,7 +20,7 @@ import { map } from 'rxjs/operators';
 })
 export class TableComponent implements OnInit, AfterViewInit {
     dataSource: MatTableDataSource<any> = new MatTableDataSource();
-    originalData: any[] = []; 
+    originalData: any[] = []; // Para mantener los datos originales
     tableDisplayColumns: string[] = ['id_proyecto', 'id_usuario', 'nombre', 'numero_registros', 'resultado_proceso', 'fecha_creacion', 'fecha_geocodificacion', 'estatus_geocodificacion'];
     tableColumns: TableColumn[] = [];
     selection = new SelectionModel<any>(true, []);
@@ -36,6 +36,8 @@ export class TableComponent implements OnInit, AfterViewInit {
     filteredData: any[] = [];
     exportClickCount = 0;
     isDialogVisible: boolean = false;
+    selectedRowIndex: number = -1;
+
 
     constructor(private confirmationService: ConfirmationService, 
                 private messageService: MessageService, 
@@ -79,9 +81,19 @@ export class TableComponent implements OnInit, AfterViewInit {
         };
     }
 
-    onSelect() {
+    onSelect(row: any, index: number) {
+        if (this.selectedRowIndex === index) {
+            this.selectedRowIndex = -1; 
+            this.selection.clear(); 
+        } else {
+            this.selectedRowIndex = index;
+            this.selection.clear(); 
+            this.selection.select(row); 
+        }
         this.select.emit(this.selection.selected);
     }
+    
+    
 
     setConfig(config: TableConfig) {
         this.tableConfig = config;
@@ -99,11 +111,11 @@ export class TableComponent implements OnInit, AfterViewInit {
     toggleAllRows() {
         if (this.isAllSelected()) {
             this.selection.clear();
-            this.onSelect();
+            // this.onSelect();
             return;
         }
         this.selection.select(...this.dataSource.data);
-        this.onSelect();
+        // this.onSelect();
     }
 
     checkboxLabel(row?: any): string {
@@ -169,15 +181,15 @@ export class TableComponent implements OnInit, AfterViewInit {
 
         const selectedProject = this.selection.selected[0];
         const proyectoId = selectedProject.id_proyecto;
-        // const estatusGeocodificacion = selectedProject.estatus_geocodificacion;
+        const estatusGeocodificacion = selectedProject.estatus_geocodificacion;
 
-        // if (estatusGeocodificacion === 'PG') {
-        //     this.messageService.add({ severity: 'warn', summary: 'Advertencia', detail: 'El proyecto ya está en proceso de geocodificación' });
-        //     return;
-        // } else if (estatusGeocodificacion === 'GC') {
-        //     this.messageService.add({ severity: 'warn', summary: 'Advertencia', detail: 'El proyecto ya ha sido geocodificado' });
-        //     return;
-        // }
+        if (estatusGeocodificacion === 'PG') {
+            this.messageService.add({ severity: 'warn', summary: 'Advertencia', detail: 'El proyecto ya está en proceso de geocodificación' });
+            return;
+        } else if (estatusGeocodificacion === 'GC') {
+            this.messageService.add({ severity: 'warn', summary: 'Advertencia', detail: 'El proyecto ya ha sido geocodificado' });
+            return;
+        }
 
         this.confirmationService.confirm({
             target: event.target as EventTarget,
