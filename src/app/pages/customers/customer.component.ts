@@ -45,6 +45,7 @@ export class CustomerComponent implements OnInit {
       { label: 'Estatus de Geocodificación', def: 'estatus_geocodificacion', dataKey: 'estatus_geocodificacion' }
     ];
   }
+  
   loadCustomers() {
     this.isLoadingTable = true;
     this.tableroService.getProyecto().subscribe(

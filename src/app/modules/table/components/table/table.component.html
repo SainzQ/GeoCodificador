@@ -22,7 +22,7 @@
 
         <!-- </p-dialog> -->
         <p-button size="small" class="custom-button" label="Estandarizar" icon="pi pi-chart-bar"></p-button>
-        <p-button size="small" class="custom-button" label="Geocodificar" icon="pi pi-globe" (click)="onGeocodificar"></p-button>
+        <p-button size="small" class="custom-button" label="Geocodificar" icon="pi pi-globe" (click)="onGeocodificar()"></p-button>
         <!-- Aplicación de la clase personalizada al botón de "Exportar" -->
         <p-button size="small" class="custom-button custom-margin" icon="pi pi-cloud-upload" label="Exportar" (click)="onExportClick()"></p-button>
         <!-- Search input field -->
@@ -32,8 +32,8 @@
                 #input />
         </div>
         <!-- Delete button with custom class -->
-        <p-button size="small" class="custom-button" (click)="eliminar($event)" label="Eliminar" icon="pi pi-trash"
-            severity="danger"></p-button>
+        <p-button size="small" class="custom-button" label="Eliminar" icon="pi pi-trash" (click)="onEliminar()" severity="danger"></p-button>
+
     </div>
 
     <!-- Table -->
