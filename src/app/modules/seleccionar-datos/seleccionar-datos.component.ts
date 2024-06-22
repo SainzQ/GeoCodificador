@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { ConfirmationService, MessageService, SelectItemGroup } from 'primeng/api';
 import { ExportarService } from '../../services/exportar.service';
+import { delay } from 'rxjs';
 
 export interface JsonObject {
   [key: string]: any;
@@ -119,13 +120,16 @@ export class SeleccionarDatosComponent {
       rejectLabel: 'No',
       accept: () => {
         const nuevoJSON = this.crearNuevoJSON();
-        // console.log(nuevoJSON);
+        console.log(nuevoJSON);
 
         this.exportarService.exportar(nuevoJSON).subscribe(
           response => {
             console.log('Respuesta del servidor:', response);
             this.onFinish.emit({ recargar: 1 });
             this.messageService.add({ severity: 'success', summary: 'Exito', detail: 'Proyecto guardado exitosamente' });
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
           },
           error => {
             console.error('Error al exportar:', error);
