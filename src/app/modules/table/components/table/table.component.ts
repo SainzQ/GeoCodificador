@@ -196,7 +196,13 @@ export class TableComponent implements OnInit, AfterViewInit {
             message: '¿Está seguro de geocodificar el proyecto?',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                this.tableroService.geocodificarProyecto(proyectoId).subscribe(
+                let idGeocodificar = {
+                    "id_proyecto": proyectoId,
+                    "nse": true,
+                    "ageb": true,
+                    "esquinas": true
+                }
+                this.tableroService.geocodificarProyecto(idGeocodificar).subscribe(
                     response => {
                         this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Proyecto geocodificado correctamente' });
                         window.location.reload();

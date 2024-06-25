@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { JsonObject } from '../modules/seleccionar-datos/seleccionar-datos.component';
 
 @Injectable({
   providedIn: 'root'
@@ -14,9 +15,9 @@ export class TableroService {
     return this.http.get<any>(this.apiUrl);
   }
 
-  geocodificarProyecto(id_proyecto: number): Observable<any> {
+  geocodificarProyecto(idGeocodificar: JsonObject): Observable<any> {
     const url = 'http://192.168.40.1:5985/GCSW/api/proyectos/geocodificar';
-    return this.http.post<any>(url, { id_proyecto });
+    return this.http.post<any>(url, idGeocodificar);
   }
   
   eliminarProyecto(id_proyecto: number): Observable<any> {
