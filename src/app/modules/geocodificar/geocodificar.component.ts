@@ -55,6 +55,8 @@ export class GeocodificarComponent implements OnChanges {
       target: event.target as EventTarget,
       message: '¿Está seguro de geocodificar el proyecto?',
       icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Si',
+      rejectLabel: 'No',
       accept: () => {
         const datosAEnviar: JsonObject = {
           id_proyecto: proyectoId,

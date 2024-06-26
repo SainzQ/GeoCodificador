@@ -202,6 +202,8 @@ export class TableComponent implements OnInit, AfterViewInit {
       target: event.target as EventTarget,
       message: '¿Estas seguro que quieres eliminar el registro? Esta acción será irreversible.',
       icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Si',
+      rejectLabel: 'No',
       accept: () => {
         this.tableroService.eliminarProyecto(proyectoId).subscribe(
           response => {
