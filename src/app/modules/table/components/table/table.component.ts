@@ -199,7 +199,8 @@ export class TableComponent implements OnInit, AfterViewInit {
       accept: () => {
         const datosAEnviar: JsonObject = {
           id_proyecto: proyectoId,
-          nse_ageb: true,
+          nse: true,
+          ageb: true,
           esquinas: true
         };
         console.log(datosAEnviar);

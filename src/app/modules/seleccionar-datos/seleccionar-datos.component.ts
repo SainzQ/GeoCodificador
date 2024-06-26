@@ -41,15 +41,25 @@ export class SeleccionarDatosComponent {
         label: 'Opcionales',
         value: 'OP',
         items: [
-          { label: 'Nombre', value: 'nombre' },
           { label: 'Colonia', value: 'colonia' },
           { label: 'Region', value: 'region' },
           { label: 'Estado', value: 'estado' },
           { label: 'Codigo Postal', value: 'codigo_postal' },
+          { label: 'Número Exterior', value: 'numero_exterior' },
+          { label: 'Número Interior', value: 'numero_interior' },
+          { label: 'Entre calle 1', value: 'calle1' },
+          { label: 'Entre calle 2', value: 'calle2' },
+        ]
+      },
+      {
+        label: 'De traspaso',
+        value: 'OP',
+        items: [
+          { label: 'Nombre del Propietario', value: 'nombre' },
           { label: 'Comentarios del Domicilio', value: 'comentarios_dom' },
           { label: 'Referencias del Domicilio', value: 'referencias_dom' },
-          { label: 'Número Exterior', value: 'numero_exterior' },
-          { label: 'Telefono', value: 'telefono' }
+          { label: 'Telefono', value: 'telefono' },
+          { label: 'Correo', value: 'correo' },
         ]
       }
     ];
@@ -91,7 +101,7 @@ export class SeleccionarDatosComponent {
 
     const datosAEnviar = {
       nombre_proyecto: this.str,
-      id_usuario: 1,
+      id_usuario: 6,
       direcciones: nuevoJSON
     };
 
