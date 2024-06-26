@@ -1,5 +1,5 @@
-import { FormControl, FormGroup } from '@angular/forms';
-import { AfterViewInit, ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
+import { FormGroup } from '@angular/forms';
+import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -8,10 +8,10 @@ import { TableAction } from '../../models/table-action.model';
 import { TABLE_ACTION } from '../../enums/table-action.enum';
 import { ColumnValuePipe } from '../../pipes/column-value.pipe';
 import { TableColumn } from '../../models/table-column.model';
-import { ConfirmationService, MessageService, ConfirmEventType } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { TableroService } from 'src/app/services/tablero.service';
-import { map } from 'rxjs/operators';
-import { JsonObject } from 'src/app/modules/seleccionar-datos/seleccionar-datos.component';
+import { GeocodificarComponent } from 'src/app/modules/geocodificar/geocodificar.component';
+import { DialogComponent } from '../../../dialog/dialog.component';
 
 @Component({
   selector: 'app-table',
@@ -21,7 +21,7 @@ import { JsonObject } from 'src/app/modules/seleccionar-datos/seleccionar-datos.
 })
 export class TableComponent implements OnInit, AfterViewInit {
   dataSource: MatTableDataSource<any> = new MatTableDataSource();
-  originalData: any[] = []; // Para mantener los datos originales
+  originalData: any[] = [];
   tableDisplayColumns: string[] = ['id_proyecto', 'id_usuario', 'nombre', 'numero_registros', 'resultado_proceso', 'fecha_creacion', 'fecha_geocodificacion', 'estatus_geocodificacion'];
   tableColumns: TableColumn[] = [];
   selection = new SelectionModel<any>(true, []);
@@ -31,13 +31,15 @@ export class TableComponent implements OnInit, AfterViewInit {
   currentRowIndex: number | undefined;
   formGroup: FormGroup = new FormGroup({});
   value: number = 0;
-  visible: boolean = false;
+  visibleImportar: boolean = false;
+  visibleGeocodificar: boolean = false;
   first: number = 0;
   rows: number = 5;
   filteredData: any[] = [];
   exportClickCount = 0;
   isDialogVisible: boolean = false;
   selectedRowIndex: number = -1;
+  selectedProject: any;
 
 
   constructor(private confirmationService: ConfirmationService,
@@ -53,21 +55,23 @@ export class TableComponent implements OnInit, AfterViewInit {
       this.dataSource.sort = this.sort;
     }
   }
-
   @Input() set columns(columns: TableColumn[]) {
     this.tableColumns = columns;
     this.tableDisplayColumns = this.tableColumns.map((col) => col.def);
   }
-
   @Input() set config(config: TableConfig) {
     this.setConfig(config);
   }
-
   @Input() createNewFormGroup!: (item: any) => FormGroup;
   @Input() isLoading = false;
 
   @Output() select: EventEmitter<any> = new EventEmitter();
   @Output() action: EventEmitter<TableAction> = new EventEmitter();
+
+  @ViewChild('geocodificarComponent') geocodificarComponent!: GeocodificarComponent;
+  @ViewChild('dialogComponent') dialogComponent!: DialogComponent;
+
+
 
   private getColumnValue: ColumnValuePipe = new ColumnValuePipe();
 
@@ -86,10 +90,12 @@ export class TableComponent implements OnInit, AfterViewInit {
     if (this.selectedRowIndex === index) {
       this.selectedRowIndex = -1;
       this.selection.clear();
+      this.selectedProject = null;
     } else {
       this.selectedRowIndex = index;
       this.selection.clear();
       this.selection.select(row);
+      this.selectedProject = row;
     }
     this.select.emit(this.selection.selected);
   }
@@ -143,7 +149,7 @@ export class TableComponent implements OnInit, AfterViewInit {
         String(val).toLowerCase().includes(this.currentFilterValue)
       )
     );
-    this.first = 0; // Reset the paginator to the first page
+    this.first = 0;
     this.updatePagedData();
   }
 
@@ -171,59 +177,16 @@ export class TableComponent implements OnInit, AfterViewInit {
   }
 
   showDialogImportar() {
-    this.visible = true;
+    this.visibleImportar = true;
   }
 
-  onGeocodificar(event: Event) {
+  showDialogGeocodificar() {
     if (this.selection.selected.length === 0) {
       this.messageService.add({ severity: 'warn', summary: 'Advertencia', detail: 'Por favor, seleccione un proyecto' });
       return;
     }
-
-    const selectedProject = this.selection.selected[0];
-    const proyectoId = selectedProject.id_proyecto;
-    const estatusGeocodificacion = selectedProject.estatus_geocodificacion;
-
-    if (estatusGeocodificacion === 'PG') {
-      this.messageService.add({ severity: 'warn', summary: 'Advertencia', detail: 'El proyecto ya está en proceso de geocodificación' });
-      return;
-    } else if (estatusGeocodificacion === 'GC') {
-      this.messageService.add({ severity: 'warn', summary: 'Advertencia', detail: 'El proyecto ya ha sido geocodificado' });
-      return;
-    }
-
-    this.confirmationService.confirm({
-      target: event.target as EventTarget,
-      message: '¿Está seguro de geocodificar el proyecto?',
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        const datosAEnviar: JsonObject = {
-          id_proyecto: proyectoId,
-          nse: true,
-          ageb: true,
-          esquinas: true
-        };
-        console.log(datosAEnviar);
-        this.tableroService.geocodificarProyecto(datosAEnviar).subscribe(
-          response => {
-            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Proyecto geocodificado correctamente' });
-            setTimeout(() => {
-              window.location.reload();
-            }, 2000);
-            console.log(response);
-
-          },
-          error => {
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo geocodificar el proyecto' });
-            console.log(error);
-
-          }
-        );
-      },
-      reject: () => {
-        this.messageService.add({ severity: 'info', summary: 'Cancelado', detail: 'No se geocodificó el proyecto' });
-      }
-    });
+    // console.log(this.selection.selected[0]);
+    this.visibleGeocodificar = true;
   }
 
   onEliminar(event: Event) {
@@ -258,11 +221,4 @@ export class TableComponent implements OnInit, AfterViewInit {
     });
   }
 
-  onExportClick() {
-    this.exportClickCount++;
-    if (this.exportClickCount === 16) {
-      alert('Pagina desarrollada por Alonso D');
-      this.exportClickCount = 0;
-    }
-  }
 }

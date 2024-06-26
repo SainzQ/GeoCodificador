@@ -19,17 +19,21 @@
       icon="pi pi-cloud-download"></p-button>
     <!-- Dialog for file upload -->
     <!-- <div class="card flex justify-content-center"> -->
-      <p-dialog header="Crear proyecto" [(visible)]="visible" [modal]="true" [breakpoints]="{ '960px': '75vw' }"
+      <p-dialog header="Crear proyecto" [(visible)]="visibleImportar" [modal]="true" [breakpoints]="{ '960px': '75vw' }"
         [style]="{ width: '50vw', maxWidth: '1450px' }" [draggable]="false" [resizable]="true" [maximizable]="true">
         <app-dialog></app-dialog>
       </p-dialog>
 
     <p-button size="small" class="custom-button" label="Estandarizar" icon="pi pi-chart-bar"></p-button>
     <p-button size="small" class="custom-button" label="Geocodificar" icon="pi pi-globe"
-      (click)="onGeocodificar($event)"></p-button>
-    <!-- Aplicación de la clase personalizada al botón de "Exportar" -->
-    <p-button size="small" class="custom-button custom-margin" icon="pi pi-cloud-upload" label="Exportar"
-      (click)="onExportClick()"></p-button>
+      (click)="showDialogGeocodificar()"></p-button>
+      <p-dialog header="GeoCodificar" [(visible)]="visibleGeocodificar" [modal]="true" [breakpoints]="{ '960px': '75vw' }"
+        [style]="{ width: '50vw', maxWidth: '1450px' }" [draggable]="false" [resizable]="true" [maximizable]="true">
+        <app-geocodificar #geocodificarComponent [selectedProject]="selectedProject"></app-geocodificar>
+      </p-dialog>
+
+      <!-- Aplicación de la clase personalizada al botón de "Exportar" -->
+    <p-button size="small" class="custom-button custom-margin" icon="pi pi-cloud-upload" label="Exportar"></p-button>
     </div>
     <!-- Search input field -->
     <div *ngIf="tableConfig?.showFilter" class="p-input-icon-left">

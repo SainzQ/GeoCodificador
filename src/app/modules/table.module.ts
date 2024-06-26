@@ -28,28 +28,30 @@ import {DialogComponent} from "./dialog/dialog.component"
 import {SeleccionarDatosComponent} from "./seleccionar-datos/seleccionar-datos.component";
 import { ProgressBarModule } from 'primeng/progressbar';
 import { TableModule as PrimeNgTableModule } from 'primeng/table';
+import { InputSwitchModule } from 'primeng/inputswitch';
 // For dynamic progressbar demo
 import { ToastModule } from 'primeng/toast';
 //service
 import { TableroService } from "../services/tablero.service";
 import { RecargarComponenteDirective } from "../directives/recargar-componente.directive";
+import { GeocodificarComponent } from "./geocodificar/geocodificar.component";
 @NgModule({
     declarations: [
-        TableComponent, 
+        TableComponent,
         ColumnValuePipe,
-        
+
         DialogComponent,
         CargarArchivoComponent,
         DialogComponent,
         SeleccionarDatosComponent,
-        RecargarComponenteDirective
+        RecargarComponenteDirective,
+        GeocodificarComponent
     ],
     imports: [
         PrimeNgTableModule,
         CommonModule,
         MatTableModule,
         MatCheckboxModule,
-        
         MatInputModule,
         MatSortModule,
         MatRadioModule,
@@ -68,6 +70,7 @@ import { RecargarComponenteDirective } from "../directives/recargar-componente.d
         DialogModule,
         ProgressSpinnerModule,
         FileUploadModule,
+        InputSwitchModule
     ],
     exports: [
         TableComponent,

@@ -1,1 +1,19 @@
-<p>modules works!</p>
+<div>
+
+
+  <div class="card flex justify-content-center">
+    <p-inputSwitch [(ngModel)]="sleccionNse"></p-inputSwitch>
+<p>NSE</p>
+
+</div>
+<div class="card flex justify-content-center">
+  <p-inputSwitch [(ngModel)]="sleccionAgeb"></p-inputSwitch>
+<p>AGEB</p>
+</div>
+<div class="card flex justify-content-center">
+  <p-inputSwitch [(ngModel)]="sleccionEsquinas"></p-inputSwitch>
+<p>Esquinas</p>
+</div>
+<p-button size="small" class="custom-button" label="Geocodificar" icon="pi pi-globe"
+      (click)="onGeocodificar($event)"></p-button>
+    </div>
