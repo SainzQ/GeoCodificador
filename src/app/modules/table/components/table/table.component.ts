@@ -12,6 +12,8 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { TableroService } from 'src/app/services/tablero.service';
 import { GeocodificarComponent } from 'src/app/modules/geocodificar/geocodificar.component';
 import { DialogComponent } from '../../../dialog/dialog.component';
+import * as XLSX from 'xlsx';
+
 
 @Component({
   selector: 'app-table',
@@ -40,6 +42,8 @@ export class TableComponent implements OnInit, AfterViewInit {
   isDialogVisible: boolean = false;
   selectedRowIndex: number = -1;
   selectedProject: any;
+  workbook: XLSX.WorkBook | null = null;
+
 
 
   constructor(private confirmationService: ConfirmationService,
@@ -70,6 +74,8 @@ export class TableComponent implements OnInit, AfterViewInit {
 
   @ViewChild('geocodificarComponent') geocodificarComponent!: GeocodificarComponent;
   @ViewChild('dialogComponent') dialogComponent!: DialogComponent;
+
+
 
 
 
@@ -221,6 +227,59 @@ export class TableComponent implements OnInit, AfterViewInit {
         this.messageService.add({ severity: 'info', summary: 'Cancelado', detail: 'No se ha eliminado el proyecto' });
       }
     });
+  }
+
+  onExportar(event: Event) {
+    if (this.selection.selected.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Advertencia', detail: 'Por favor, seleccione un proyecto' });
+      return;
+    }
+
+    const selectedProject = this.selection.selected[0];
+    const proyectoId = selectedProject.id_proyecto;
+
+    this.confirmationService.confirm({
+      target: event.target as EventTarget,
+      message: '¿Está seguro de exportar el proyecto?',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.tableroService.exportarProyecto(proyectoId).subscribe(
+          response => {
+            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Proyecto exportado correctamente' });
+            this.createExcelFile(response, selectedProject);
+          },
+          error => {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo exportar el proyecto' });
+            console.error(error);
+          }
+        );
+      },
+      reject: () => {
+        this.messageService.add({ severity: 'info', summary: 'Cancelado', detail: 'No se exportó el proyecto' });
+      }
+    });
+  }
+
+  createExcelFile(data: any, projectInfo: any) {
+    const workbook = XLSX.utils.book_new();
+
+    const wsEntrada = XLSX.utils.json_to_sheet(data.direcciones_entrada);
+    XLSX.utils.book_append_sheet(workbook, wsEntrada, 'Direcciones de Entrada');
+
+    const wsSalida = XLSX.utils.json_to_sheet(data.direcciones_salida);
+    XLSX.utils.book_append_sheet(workbook, wsSalida, 'Direcciones de Salida');
+
+    const projectData = [
+      { Propiedad: 'Nombre del Proyecto', Valor: projectInfo.nombre },
+      { Propiedad: 'Fecha de Creación', Valor: projectInfo.fecha_creacion },
+      { Propiedad: 'Fecha de Geocodificación', Valor: projectInfo.fecha_geocodificacion },
+      { Propiedad: 'Número de Registros', Valor: projectInfo.numero_registros },
+      { Propiedad: 'Estatus de Geocodificación', Valor: projectInfo.estatus_geocodificacion }
+    ];
+    const wsInfo = XLSX.utils.json_to_sheet(projectData);
+    XLSX.utils.book_append_sheet(workbook, wsInfo, 'Información del Proyecto');
+
+    XLSX.writeFile(workbook, `${projectInfo.nombre}-resultados.xlsx`);
   }
 
 }

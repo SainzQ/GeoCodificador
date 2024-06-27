@@ -12,9 +12,9 @@ import { TableroService } from 'src/app/services/tablero.service';
 })
 export class GeocodificarComponent implements OnChanges {
   selection = new SelectionModel<any>(true, []);
-  sleccionNse: boolean = false;
-  sleccionAgeb: boolean = false;
-  sleccionEsquinas: boolean = false;
+  seleccionNse: boolean = false;
+  seleccionAgeb: boolean = false;
+  seleccionEsquinas: boolean = false;
 
   @Input() selectedProject: any;
 
@@ -60,9 +60,9 @@ export class GeocodificarComponent implements OnChanges {
       accept: () => {
         const datosAEnviar: JsonObject = {
           id_proyecto: proyectoId,
-          nse: this.sleccionNse,
-          ageb: this.sleccionAgeb,
-          esquinas: this.sleccionEsquinas
+          nse: this.seleccionNse,
+          ageb: this.seleccionAgeb,
+          esquinas: this.seleccionEsquinas
         };
         console.log(datosAEnviar);
         this.tableroService.geocodificarProyecto(datosAEnviar).subscribe(

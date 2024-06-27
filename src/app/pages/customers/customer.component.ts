@@ -66,13 +66,13 @@ export class CustomerComponent implements OnInit {
       }
     );
   }
-  
+
 
   onSelect(data: any) {
-    console.log(data);
+    // console.log(data);
   }
 
-  
+
 
   onSave(newRow: Customer) {
     this.isLoadingTable = true;
