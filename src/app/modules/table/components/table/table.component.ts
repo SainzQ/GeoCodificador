@@ -261,6 +261,8 @@ export class TableComponent implements OnInit, AfterViewInit {
   }
 
   createExcelFile(data: any, projectInfo: any) {
+    console.log(projectInfo);
+
     const workbook = XLSX.utils.book_new();
 
     const wsEntrada = XLSX.utils.json_to_sheet(data.direcciones_entrada);
@@ -269,14 +271,20 @@ export class TableComponent implements OnInit, AfterViewInit {
     const wsSalida = XLSX.utils.json_to_sheet(data.direcciones_salida);
     XLSX.utils.book_append_sheet(workbook, wsSalida, 'Direcciones de Salida');
 
-    const projectData = [
-      { Propiedad: 'Nombre del Proyecto', Valor: projectInfo.nombre },
-      { Propiedad: 'Fecha de Creación', Valor: projectInfo.fecha_creacion },
-      { Propiedad: 'Fecha de Geocodificación', Valor: projectInfo.fecha_geocodificacion },
-      { Propiedad: 'Número de Registros', Valor: projectInfo.numero_registros },
-      { Propiedad: 'Estatus de Geocodificación', Valor: projectInfo.estatus_geocodificacion }
-    ];
-    const wsInfo = XLSX.utils.json_to_sheet(projectData);
+    const wsNE = XLSX.utils.json_to_sheet(data.direcciones_ne);
+    XLSX.utils.book_append_sheet(workbook, wsNE, 'Direcciones No Encontradas');
+
+    // const projectData = [
+    //   { Propiedad: 'Nombre del Proyecto', Valor: projectInfo.nombre },
+    //   { Propiedad: 'Fecha de Creación', Valor: projectInfo.fecha_creacion },
+    //   { Propiedad: 'Fecha de Geocodificación', Valor: projectInfo.fecha_geocodificacion },
+    //   { Propiedad: 'Número de Registros', Valor: projectInfo.numero_registros },
+    //   { Propiedad: 'Estatus de Geocodificación', Valor: projectInfo.estatus_geocodificacion }
+    // ];
+    // const wsInfo = XLSX.utils.json_to_sheet(projectData);
+    // XLSX.utils.book_append_sheet(workbook, wsInfo, 'Información del Proyecto');
+
+    const wsInfo = XLSX.utils.json_to_sheet(data.proyecto);
     XLSX.utils.book_append_sheet(workbook, wsInfo, 'Información del Proyecto');
 
     XLSX.writeFile(workbook, `${projectInfo.nombre}-resultados.xlsx`);
