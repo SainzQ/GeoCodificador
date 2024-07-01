@@ -1,0 +1,80 @@
+<div id="map" #map style="width: 100vw; height: 100vh;"></div>
+<p-dialog header="Información del punto" [(visible)]="displayDialog"
+    [style]="{width: '30vw', height: '100vh', right: '0', top: '0', margin: '0'}" [draggable]="false"
+    [resizable]="false" [modal]="false" position="right" [closeOnEscape]="false" [closable]="false">
+    <ng-container *ngIf="selectedFeature">
+        <div class="p-grid p-fluid">
+            <div class="p-col-12 p-md-6">
+                <div class="p-field">
+                    <label>Nombre</label>
+                    <input pInputText [value]="selectedFeature.nombre || 'No disponible'" readonly>
+                </div>
+            </div>
+            <div class="p-col-12 p-md-6">
+                <div class="p-field">
+                    <label>Dirección</label>
+                    <input pInputText
+                        [value]="selectedFeature.calle + ' ' + selectedFeature.numero_exterior + (selectedFeature.numero_interior ? ', Int. ' + selectedFeature.numero_interior : '')"
+                        readonly>
+                </div>
+            </div>
+            <div class="p-col-12 p-md-6">
+                <div class="p-field">
+                    <label>Colonia</label>
+                    <input pInputText [value]="selectedFeature.colonia" readonly>
+                </div>
+            </div>
+            <div class="p-col-12 p-md-6">
+                <div class="p-field">
+                    <label>Código Postal</label>
+                    <input pInputText [value]="selectedFeature.codigo_postal" readonly>
+                </div>
+            </div>
+            <div class="p-col-12 p-md-6">
+                <div class="p-field">
+                    <label>Municipio</label>
+                    <input pInputText [value]="selectedFeature.municipio" readonly>
+                </div>
+            </div>
+            <div class="p-col-12 p-md-6">
+                <div class="p-field">
+                    <label>Estado</label>
+                    <input pInputText [value]="selectedFeature.estado" readonly>
+                </div>
+            </div>
+            <div class="p-col-12 p-md-6">
+                <div class="p-field">
+                    <label>Región</label>
+                    <input pInputText [value]="selectedFeature.region" readonly>
+                </div>
+            </div>
+            <div class="p-col-12 p-md-6">
+                <div class="p-field">
+                    <label>Teléfono</label>
+                    <input pInputText [value]="selectedFeature.telefono || 'No disponible'" readonly>
+                </div>
+            </div>
+            <div class="p-col-12 p-md-6">
+                <div class="p-field">
+                    <label>Georesultado</label>
+                    <input pInputText [value]="selectedFeature.georesultado" readonly>
+                </div>
+            </div>
+            <div class="p-col-12 p-md-6">
+                <div class="p-field">
+                    <label>NSE</label>
+                    <input pInputText [value]="selectedFeature.nse" readonly>
+                </div>
+            </div>
+            <div class="p-col-12 p-md-6">
+                <div class="p-field">
+                    <label>Scoring</label>
+                    <input pInputText [value]="selectedFeature.scoring" readonly>
+                </div>
+            </div>
+        </div>
+    </ng-container>
+    <ng-template pTemplate="footer">
+        <p-button icon="pi pi-check" (click)="displayDialog=false" label="Cerrar" styleClass="p-button-text"></p-button>
+    </ng-template>
+</p-dialog>

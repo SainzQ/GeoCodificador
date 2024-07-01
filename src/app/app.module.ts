@@ -9,6 +9,8 @@ import { AppComponent } from './app.component';
 import { CustomerComponent } from './pages/customers/customer.component';
 import { TableCustomersComponent } from './components/table-customers/table-customers.component';
 import { RecargarComponenteDirective } from './directives/recargar-componente.directive';
+import { DialogModule } from 'primeng/dialog';
+import { ButtonModule } from 'primeng/button';
 // import { ModulesComponent } from './app/modules/modules.component';
 
 
@@ -26,7 +28,9 @@ import { RecargarComponenteDirective } from './directives/recargar-componente.di
     BrowserAnimationsModule,
     MatTableModule,
     TableModule,
-    HttpClientModule
+    HttpClientModule,
+    DialogModule,
+    ButtonModule
   ],
   providers: [RecargarComponenteDirective],
   bootstrap: [AppComponent]
