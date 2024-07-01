@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, Inject, PLATFORM_ID, NgZone, ChangeDetectorRef } from '@angular/core';
 import { InteractiveMapService } from '../../services/interactive-map.service';
 import Map from 'ol/Map';
 import View from 'ol/View';
@@ -10,6 +10,7 @@ import { fromLonLat } from 'ol/proj';
 import { Style, Circle as CircleStyle, Fill, Stroke } from 'ol/style';
 import Overlay from 'ol/Overlay';
 import { FeatureProperties } from 'src/app/models/featureProperties.model';
+import { DireccionActualizacion } from 'src/app/models/address.model';
 
 @Component({
   selector: 'app-mapa-interactivo',
@@ -26,10 +27,16 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   displayDialog: boolean = false;
   selectedFeature: FeatureProperties | null = null;
   previousSelectedFeature: Feature<Point> | null = null;
+  cursorStyle: string = 'default';
+  inputDisabled: boolean = true;
+  buttonDisabledEdit: boolean = false;
+  buttonDisabledSave: boolean = true;
 
   constructor(
     private mapService: InteractiveMapService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private ngZone: NgZone,
+    private cd: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
@@ -50,7 +57,10 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
+    //this.ngZone.runOutsideAngular(()=>{
     this.initMap();
+    this.addPointerMoveInteraction();
+    //})
   }
 
   initMap() {
@@ -82,6 +92,18 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     this.map.addOverlay(this.overlay);
 
     this.map.on('click', (event) => this.handleMapClick(event));
+  }
+
+  addPointerMoveInteraction() {
+    this.map.on('pointermove', (evt) => {
+      if (evt.dragging) {
+        return;
+      }
+      const pixel = this.map.getEventPixel(evt.originalEvent);
+      const hit = this.map.hasFeatureAtPixel(pixel);
+      this.cursorStyle = hit ? 'pointer' : 'default';
+      this.map.getTargetElement().style.cursor = this.cursorStyle;
+    });
   }
 
   handleMapClick(event: any) {
@@ -273,6 +295,62 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     } else {
       console.error('Map or map view is not initialized');
     }
+  }
+
+  editarInformacionSalida() {
+    this.inputDisabled = false;
+    this.buttonDisabledSave = false;
+    this.buttonDisabledEdit = true;
+  }
+
+  actualizarInformacionSalida() {
+    if (!this.selectedFeature) {
+      console.error('No feature selected');
+      return;
+    }
+
+    const actualizacion: DireccionActualizacion = {
+      id_direccion_salida: this.selectedFeature.id_direccion_salida,
+      direccion: {
+        id_req: this.selectedFeature.id_req,
+        nombre: this.selectedFeature.nombre,
+        calle: this.selectedFeature.calle,
+        numero_exterior: this.selectedFeature.numero_exterior,
+        numero_interior: this.selectedFeature.numero_interior,
+        colonia: this.selectedFeature.colonia,
+        codigo_postal: this.selectedFeature.codigo_postal,
+        municipio: this.selectedFeature.municipio,
+        estado: this.selectedFeature.estado,
+        region: this.selectedFeature.region,
+        esquina1: this.selectedFeature.esquina1,
+        esquina2: this.selectedFeature.esquina2,
+        coordx: parseFloat(this.selectedFeature.coordx),
+        coordy: parseFloat(this.selectedFeature.coordy),
+        nse: this.selectedFeature.nse,
+        ageb: this.selectedFeature.ageb,
+        telefono: this.selectedFeature.telefono,
+        correo: this.selectedFeature.correo,
+        comentarios_dom: this.selectedFeature.comentarios_dom,
+        referencias_dom: this.selectedFeature.referencias_dom
+      }
+    };
+
+    this.mapService.actualizarDireccion(actualizacion).subscribe(
+      response => {
+        console.log('Direccion actualizada:', actualizacion);
+        console.log('Dirección actualizada exitosamente:', response);
+        this.ngZone.run(() => {
+          this.inputDisabled = true;
+          this.buttonDisabledSave = true;
+          this.buttonDisabledEdit = false;
+          this.cd.detectChanges();
+        });
+      },
+      error => {
+        console.error('Error al actualizar la dirección:', error);
+        console.log('Direccion actualizada:', actualizacion);
+      }
+    );
   }
 
 }

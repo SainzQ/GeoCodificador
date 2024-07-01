@@ -1,4 +1,4 @@
-<div id="map" #map style="width: 100vw; height: 100vh;"></div>
+<div id="map" #map style="width: 100vw; height: 100vh;" [style.cursor]="cursorStyle"></div>
 <p-dialog header="Información del punto" [(visible)]="displayDialog"
     [style]="{width: '30vw', height: '100vh', right: '0', top: '0', margin: '0'}" [draggable]="false"
     [resizable]="false" [modal]="false" position="right" [closeOnEscape]="false" [closable]="false">
@@ -7,74 +7,80 @@
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
                     <label>Nombre</label>
-                    <input pInputText [value]="selectedFeature.nombre || 'No disponible'" readonly>
+                    <input pInputText [(ngModel)]="selectedFeature.nombre" [disabled]="inputDisabled">
                 </div>
             </div>
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
                     <label>Dirección</label>
-                    <input pInputText
-                        [value]="selectedFeature.calle + ' ' + selectedFeature.numero_exterior + (selectedFeature.numero_interior ? ', Int. ' + selectedFeature.numero_interior : '')"
-                        readonly>
+                    <input pInputText [(ngModel)]="selectedFeature.calle" [disabled]="inputDisabled">
+                </div>
+                <div class="p-field">
+                    <label>Número Exterior</label>
+                    <input pInputText [(ngModel)]="selectedFeature.numero_exterior" [disabled]="inputDisabled">
                 </div>
             </div>
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
                     <label>Colonia</label>
-                    <input pInputText [value]="selectedFeature.colonia" readonly>
+                    <input pInputText [(ngModel)]="selectedFeature.colonia" [disabled]="inputDisabled">
                 </div>
             </div>
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
                     <label>Código Postal</label>
-                    <input pInputText [value]="selectedFeature.codigo_postal" readonly>
+                    <input pInputText [(ngModel)]="selectedFeature.codigo_postal" [disabled]="inputDisabled">
                 </div>
             </div>
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
                     <label>Municipio</label>
-                    <input pInputText [value]="selectedFeature.municipio" readonly>
+                    <input pInputText [(ngModel)]="selectedFeature.municipio" [disabled]="inputDisabled">
                 </div>
             </div>
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
                     <label>Estado</label>
-                    <input pInputText [value]="selectedFeature.estado" readonly>
+                    <input pInputText [(ngModel)]="selectedFeature.estado" [disabled]="inputDisabled">
                 </div>
             </div>
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
                     <label>Región</label>
-                    <input pInputText [value]="selectedFeature.region" readonly>
+                    <input pInputText [(ngModel)]="selectedFeature.region" [disabled]="inputDisabled">
                 </div>
             </div>
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
                     <label>Teléfono</label>
-                    <input pInputText [value]="selectedFeature.telefono || 'No disponible'" readonly>
+                    <input pInputText [(ngModel)]="selectedFeature.telefono" [disabled]="inputDisabled">
                 </div>
             </div>
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
                     <label>Georesultado</label>
-                    <input pInputText [value]="selectedFeature.georesultado" readonly>
+                    <input pInputText [(ngModel)]="selectedFeature.georesultado" [disabled]="inputDisabled">
                 </div>
             </div>
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
                     <label>NSE</label>
-                    <input pInputText [value]="selectedFeature.nse" readonly>
+                    <input pInputText [(ngModel)]="selectedFeature.nse" [disabled]="inputDisabled">
                 </div>
             </div>
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
                     <label>Scoring</label>
-                    <input pInputText [value]="selectedFeature.scoring" readonly>
+                    <input pInputText [(ngModel)]="selectedFeature.scoring" [disabled]="inputDisabled">
                 </div>
             </div>
         </div>
     </ng-container>
     <ng-template pTemplate="footer">
+        <p-button icon="pi pi-pencil" (click)="editarInformacionSalida()" label="Editar" styleClass="p-button-text"
+            [disabled]="buttonDisabledEdit"></p-button>
+        <p-button icon="pi pi-save" (click)="actualizarInformacionSalida()" label="Guardar" styleClass="p-button-text"
+            [disabled]="buttonDisabledSave"></p-button>
         <p-button icon="pi pi-check" (click)="displayDialog=false" label="Cerrar" styleClass="p-button-text"></p-button>
     </ng-template>
 </p-dialog>
