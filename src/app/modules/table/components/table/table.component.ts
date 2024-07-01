@@ -242,6 +242,8 @@ export class TableComponent implements OnInit, AfterViewInit {
       target: event.target as EventTarget,
       message: '¿Está seguro de exportar el proyecto?',
       icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Si',
+      rejectLabel: 'No',
       accept: () => {
         this.tableroService.exportarProyecto(proyectoId).subscribe(
           response => {
