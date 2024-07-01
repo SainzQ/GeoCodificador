@@ -13,6 +13,7 @@ import { TableroService } from 'src/app/services/tablero.service';
 import { GeocodificarComponent } from 'src/app/modules/geocodificar/geocodificar.component';
 import { DialogComponent } from '../../../dialog/dialog.component';
 import * as XLSX from 'xlsx';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -48,7 +49,8 @@ export class TableComponent implements OnInit, AfterViewInit {
 
   constructor(private confirmationService: ConfirmationService,
     private messageService: MessageService,
-    private tableroService: TableroService) { }
+    private tableroService: TableroService,
+    private router: Router) { }
 
   @ViewChild(MatSort) sort!: MatSort;
   @Input() set data(data: any[]) {

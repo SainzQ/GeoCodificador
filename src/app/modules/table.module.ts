@@ -35,6 +35,7 @@ import { ToastModule } from 'primeng/toast';
 import { TableroService } from "../services/tablero.service";
 import { RecargarComponenteDirective } from "../directives/recargar-componente.directive";
 import { GeocodificarComponent } from "./geocodificar/geocodificar.component";
+import { MapaInteractivoComponent } from './mapa-interactivo/mapa-interactivo.component';
 @NgModule({
     declarations: [
         TableComponent,
@@ -45,7 +46,8 @@ import { GeocodificarComponent } from "./geocodificar/geocodificar.component";
         DialogComponent,
         SeleccionarDatosComponent,
         RecargarComponenteDirective,
-        GeocodificarComponent
+        GeocodificarComponent,
+        MapaInteractivoComponent
     ],
     imports: [
         PrimeNgTableModule,

@@ -1,0 +1,26 @@
+#map {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    max-width: 100%;
+    max-height: 100%;
+    z-index: 0;
+}
+
+:host ::ng-deep .p-dialog {
+    position: fixed !important;
+    right: 1vw !important;
+    top: 2vh !important;
+    bottom: 2vh;
+    margin: 0 !important;
+    height: 96vh !important;
+    max-height: 96vh !important;
+    overflow-y: auto;
+}
+
