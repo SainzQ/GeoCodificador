@@ -309,7 +309,10 @@ export class TableComponent implements OnInit, AfterViewInit {
       esquina1: "Esquina 1",
       esquina2: "Esquina 2",
       scoring: "Scoring",
-      georesultado: "Resultado Geocodificación"
+      georesultado: "Resultado Geocodificación",
+      id_proyecto: "ID Proyecto",
+      cuadrante: "Cuadrante",
+      id_proceso: "Numero del Proceso",
     };
 
     const combinedData = data.direcciones_entrada.map((entrada: any, index: number) => {
@@ -345,7 +348,7 @@ export class TableComponent implements OnInit, AfterViewInit {
         nombre: "Nombre del Proyecto",
         fecha_creacion: "Fecha de Creación",
         inicio_geocodificacion: "Inicio de Geocodificación",
-        fecha_geocodificacion: "Fecha de Geocodificación",
+        fecha_geocodificacion: "Fin de Geocodificación",
         resultado_proceso: "Resultado del Proceso",
         numero_registros: "Número de Registros",
         estatus_geocodificacion: "Estatus de Geocodificación",
@@ -355,7 +358,7 @@ export class TableComponent implements OnInit, AfterViewInit {
 
       renamedItem["Fecha de Creación"] = formatDateTime(item.fecha_creacion);
       renamedItem["Inicio de Geocodificación"] = formatDateTime(item.inicio_geocodificacion);
-      renamedItem["Fecha de Geocodificación"] = formatDateTime(item.fecha_geocodificacion);
+      renamedItem["Fin de Geocodificación"] = formatDateTime(item.fecha_geocodificacion);
 
       return renamedItem;
     });
