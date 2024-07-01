@@ -11,6 +11,7 @@ import { Style, Circle as CircleStyle, Fill, Stroke } from 'ol/style';
 import Overlay from 'ol/Overlay';
 import { FeatureProperties } from 'src/app/models/featureProperties.model';
 import { DireccionActualizacion } from 'src/app/models/address.model';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-mapa-interactivo',
@@ -19,41 +20,29 @@ import { DireccionActualizacion } from 'src/app/models/address.model';
 })
 export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   @ViewChild('map') mapElement!: ElementRef;
-  map!: Map;
-  vectorSource!: VectorSource;
-  numberOfAddresses: number = 0;
-  numberOfNotValidAddresses: number = 0;
-  overlay!: Overlay;
-  displayDialog: boolean = false;
-  selectedFeature: FeatureProperties | null = null;
-  previousSelectedFeature: Feature<Point> | null = null;
-  cursorStyle: string = 'default';
-  inputDisabled: boolean = true;
-  buttonDisabledEdit: boolean = false;
-  buttonDisabledSave: boolean = true;
+  public map!: Map;
+  private vectorSource!: VectorSource;
+  public numberOfAddresses: number = 0;
+  public numberOfNotValidAddresses: number = 0;
+  private overlay!: Overlay;
+  public displayDialog: boolean = false;
+  public selectedFeature: FeatureProperties | null = null;
+  public previousSelectedFeature: Feature<Point> | null = null;
+  public cursorStyle: string = 'default';
+  public inputDisabled: boolean = true;
+  public buttonDisabledEdit: boolean = false;
+  public buttonDisabledSave: boolean = true;
 
   constructor(
     private mapService: InteractiveMapService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private ngZone: NgZone,
-    private cd: ChangeDetectorRef
+    private cd: ChangeDetectorRef,
+    private messageService: MessageService
   ) { }
 
   ngOnInit() {
-    this.mapService.getAddress(32).subscribe(
-      (response: any) => {
-        if (response.status === 200) {
-          this.addPointsToMapAddresFounded(response.direcciones_salida);
-          this.numberOfAddresses = response.direcciones_salida.length;
-          this.numberOfNotValidAddresses = response.direcciones_ne.length;
-          let totalNumberOfAddresses = response.direcciones_salida.length + response.direcciones_ne.length;
-          console.log('Número de direcciones totales:', totalNumberOfAddresses)
-          console.log('Número de direcciones encontradas:', this.numberOfAddresses);
-          console.log('Número de direcciones no encontradas:', this.numberOfNotValidAddresses);
-        }
-      },
-      error => console.error('Error fetching addresses:', error)
-    );
+    this.getDireccionesSalida();
   }
 
   ngAfterViewInit() {
@@ -155,6 +144,22 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     this.selectedFeature = null;
   }
 
+  getDireccionesSalida() {
+    this.mapService.getAddress(32).subscribe(
+      (response: any) => {
+        if (response.status === 200) {
+          this.addPointsToMapAddresFounded(response.direcciones_salida);
+          this.numberOfAddresses = response.direcciones_salida.length;
+          this.numberOfNotValidAddresses = response.direcciones_ne.length;
+          let totalNumberOfAddresses = response.direcciones_salida.length + response.direcciones_ne.length;
+          console.log('Número de direcciones totales:', totalNumberOfAddresses)
+          console.log('Número de direcciones encontradas:', this.numberOfAddresses);
+          console.log('Número de direcciones no encontradas:', this.numberOfNotValidAddresses);
+        }
+      },
+      error => console.error('Error fetching addresses:', error)
+    );
+  }
 
   addPointsToMapAddresFounded(addresses: any[]) {
     let validAddresses = 0;
@@ -271,6 +276,16 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
             });
             sd++;
             break;
+          case null:
+            style = new Style({
+              image: new CircleStyle({
+                radius: 5,
+                fill: new Fill({ color: '#FF8F00' }),
+                stroke: new Stroke({ color: 'white', width: 2 })
+              })
+            });
+            sd++;
+            break;
           default:
             console.log('address.georesultado not found');
             return acc; // Skip this feature if georesultado is not recognized
@@ -339,6 +354,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       response => {
         console.log('Direccion actualizada:', actualizacion);
         console.log('Dirección actualizada exitosamente:', response);
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Dirección actualizada correctamente' });
         this.ngZone.run(() => {
           this.inputDisabled = true;
           this.buttonDisabledSave = true;
@@ -347,8 +363,8 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
         });
       },
       error => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error en la actualización' });
         console.error('Error al actualizar la dirección:', error);
-        console.log('Direccion actualizada:', actualizacion);
       }
     );
   }
