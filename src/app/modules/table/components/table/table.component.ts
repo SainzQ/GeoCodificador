@@ -365,4 +365,8 @@ export class TableComponent implements OnInit, AfterViewInit {
 
     XLSX.writeFile(workbook, `${projectInfo.nombre}-resultados.xlsx`);
   }
+
+  navegarARuta(){
+    this.router.navigate(['gci']);
+  }
 }
