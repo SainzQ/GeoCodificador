@@ -1,0 +1,21 @@
+.container-exportar {
+  display: flex;
+  justify-content: right;
+  margin-top: 20px;
+}
+
+.option-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding-left: 40px;
+}
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.option-item p {
+  margin: 0;
+}

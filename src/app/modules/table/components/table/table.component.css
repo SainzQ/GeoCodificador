@@ -77,3 +77,8 @@ h4 {
 .status-progress .p-progressbar-label {
   font-size: 12px; /* Tamaño de la fuente del texto en la barra de progreso */
 }
+
+/* .container-button {
+  justify-content: right;
+  margin-right: 20px;
+} */

@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { ConfirmationService, MessageService, SelectItemGroup } from 'primeng/api';
 import { ExportarService } from '../../services/exportar.service';
+import { delay } from 'rxjs';
 
 export interface JsonObject {
   [key: string]: any;
@@ -40,15 +41,25 @@ export class SeleccionarDatosComponent {
         label: 'Opcionales',
         value: 'OP',
         items: [
-          { label: 'Nombre', value: 'nombre' },
           { label: 'Colonia', value: 'colonia' },
           { label: 'Region', value: 'region' },
           { label: 'Estado', value: 'estado' },
           { label: 'Codigo Postal', value: 'codigo_postal' },
+          { label: 'Número Exterior', value: 'numero_exterior' },
+          { label: 'Número Interior', value: 'numero_interior' },
+          { label: 'Entre calle 1', value: 'calle1' },
+          { label: 'Entre calle 2', value: 'calle2' },
+        ]
+      },
+      {
+        label: 'De traspaso',
+        value: 'OP',
+        items: [
+          { label: 'Nombre del Propietario', value: 'nombre' },
           { label: 'Comentarios del Domicilio', value: 'comentarios_dom' },
           { label: 'Referencias del Domicilio', value: 'referencias_dom' },
-          { label: 'Número Exterior', value: 'numero_exterior' },
-          { label: 'Telefono', value: 'telefono' }
+          { label: 'Telefono', value: 'telefono' },
+          { label: 'Correo', value: 'correo' },
         ]
       }
     ];
@@ -119,13 +130,16 @@ export class SeleccionarDatosComponent {
       rejectLabel: 'No',
       accept: () => {
         const nuevoJSON = this.crearNuevoJSON();
-        // console.log(nuevoJSON);
+        console.log(nuevoJSON);
 
         this.exportarService.exportar(nuevoJSON).subscribe(
           response => {
             console.log('Respuesta del servidor:', response);
             this.onFinish.emit({ recargar: 1 });
             this.messageService.add({ severity: 'success', summary: 'Exito', detail: 'Proyecto guardado exitosamente' });
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
           },
           error => {
             console.error('Error al exportar:', error);
