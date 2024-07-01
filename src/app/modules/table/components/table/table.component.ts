@@ -265,37 +265,104 @@ export class TableComponent implements OnInit, AfterViewInit {
   }
 
   createExcelFile(data: any, projectInfo: any) {
-    console.log(projectInfo);
-
     const workbook = XLSX.utils.book_new();
 
-    const wsEntrada = XLSX.utils.json_to_sheet(data.direcciones_entrada);
-    XLSX.utils.book_append_sheet(workbook, wsEntrada, 'Direcciones de Entrada');
+    const renameKeys = (obj: any, keyMap: { [key: string]: string }) => {
+      return Object.keys(obj).reduce((acc, key) => {
+        const newKey = keyMap[key] || key;
+        acc[newKey] = obj[key];
+        return acc;
+      }, {} as any);
+    };
 
-    const wsSalida = XLSX.utils.json_to_sheet(data.direcciones_salida);
-    XLSX.utils.book_append_sheet(workbook, wsSalida, 'Direcciones de Salida');
+    const formatDateTime = (isoString: string): string => {
+      const date = new Date(isoString);
+      return date.toLocaleString('es-ES', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }).replace(',', '');
+    };
 
-    const wsNE = XLSX.utils.json_to_sheet(data.direcciones_ne);
+    const keyMap = {
+      id_req: "ID Registro",
+      nombre: "Nombre",
+      calle: "Calle",
+      numero_exterior: "Número Exterior",
+      numero_interior: "Número Interior",
+      colonia: "Colonia",
+      codigo_postal: "Código Postal",
+      municipio: "Municipio",
+      estado: "Estado",
+      region: "Región",
+      telefono: "Teléfono",
+      correo: "Correo",
+      referencias_dom: "Referencias",
+      comentarios_dom: "Comentarios",
+      coordx: "Longitud",
+      coordy: "Latitud",
+      nse: "NSE",
+      ageb: "AGEB",
+      esquina1: "Esquina 1",
+      esquina2: "Esquina 2",
+      scoring: "Scoring",
+      georesultado: "Resultado Geocodificación"
+    };
+
+    const combinedData = data.direcciones_entrada.map((entrada: any, index: number) => {
+      const salida = data.direcciones_salida[index] || {};
+      const entradaRenamed = renameKeys(entrada, keyMap);
+      const salidaRenamed = renameKeys(salida, keyMap);
+
+      return {
+        ...Object.keys(entradaRenamed).reduce((acc, key) => {
+          acc[`${key} (Entrada)`] = entradaRenamed[key];
+          return acc;
+        }, {} as any),
+        ...Object.keys(salidaRenamed).reduce((acc, key) => {
+          if (!['ID Registro', 'Nombre', 'Teléfono', 'Correo'].includes(key)) {
+            acc[`${key} (Salida)`] = salidaRenamed[key];
+          }
+          return acc;
+        }, {} as any)
+      };
+    });
+
+    const wsCombined = XLSX.utils.json_to_sheet(combinedData);
+    XLSX.utils.book_append_sheet(workbook, wsCombined, 'Direcciones');
+
+    // if (data.direcciones_ne && data.direcciones_ne.length > 0) {
+    const wsNE = XLSX.utils.json_to_sheet(data.direcciones_ne.map((item: any) => renameKeys(item, keyMap)));
     XLSX.utils.book_append_sheet(workbook, wsNE, 'Direcciones No Encontradas');
+    // }
 
-    // const projectData = [
-    //   { Propiedad: 'Nombre del Proyecto', Valor: projectInfo.nombre },
-    //   { Propiedad: 'Fecha de Creación', Valor: projectInfo.fecha_creacion },
-    //   { Propiedad: 'Fecha de Geocodificación', Valor: projectInfo.fecha_geocodificacion },
-    //   { Propiedad: 'Número de Registros', Valor: projectInfo.numero_registros },
-    //   { Propiedad: 'Estatus de Geocodificación', Valor: projectInfo.estatus_geocodificacion }
-    // ];
-    // const wsInfo = XLSX.utils.json_to_sheet(projectData);
-    // XLSX.utils.book_append_sheet(workbook, wsInfo, 'Información del Proyecto');
+    const projectData = data.proyecto.map((item: any) => {
+      const renamedItem = renameKeys(item, {
+        id_proyecto: "ID Proyecto",
+        nombre: "Nombre del Proyecto",
+        fecha_creacion: "Fecha de Creación",
+        inicio_geocodificacion: "Inicio de Geocodificación",
+        fecha_geocodificacion: "Fecha de Geocodificación",
+        resultado_proceso: "Resultado del Proceso",
+        numero_registros: "Número de Registros",
+        estatus_geocodificacion: "Estatus de Geocodificación",
+        id_usuario: "ID Usuario",
+        tiempo_geocodificacion: "Tiempo de Geocodificación"
+      });
 
-    const wsInfo = XLSX.utils.json_to_sheet(data.proyecto);
+      renamedItem["Fecha de Creación"] = formatDateTime(item.fecha_creacion);
+      renamedItem["Inicio de Geocodificación"] = formatDateTime(item.inicio_geocodificacion);
+      renamedItem["Fecha de Geocodificación"] = formatDateTime(item.fecha_geocodificacion);
+
+      return renamedItem;
+    });
+
+    const wsInfo = XLSX.utils.json_to_sheet(projectData);
     XLSX.utils.book_append_sheet(workbook, wsInfo, 'Información del Proyecto');
 
     XLSX.writeFile(workbook, `${projectInfo.nombre}-resultados.xlsx`);
   }
-
-  navegarARuta() {
-    this.router.navigate(['/gci']);
-  }
-
 }
