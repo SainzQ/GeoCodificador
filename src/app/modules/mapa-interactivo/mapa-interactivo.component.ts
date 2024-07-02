@@ -32,6 +32,19 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   public inputDisabled: boolean = true;
   public buttonDisabledEdit: boolean = false;
   public buttonDisabledSave: boolean = true;
+  public legendItems = [
+    { georesultado: 'S1', color: '#059212', label: 'S1', count: 0 },
+    { georesultado: 'S2', color: '#06D001', label: 'S2', count: 0 },
+    { georesultado: 'S3', color: '#9BEC00', label: 'S3', count: 0 },
+    { georesultado: 'S4', color: '#4C3BCF', label: 'S4', count: 0 },
+    { georesultado: 'S5', color: '#3FA2F6', label: 'S5', count: 0 },
+    { georesultado: 'S6', color: '#A7E6FF', label: 'S6', count: 0 },
+    { georesultado: 'N1', color: '#FFDB00', label: 'N1', count: 0 },
+    { georesultado: 'C1', color: '#FF9A00', label: 'C1', count: 0 },
+    { georesultado: 'NG', color: 'red', label: 'NG', count: 0 },
+    { georesultado: 'ED', color: '#15F5BA', label: 'ED', count: 0 },
+    { georesultado: 'SD', color: 'black', label: 'SD', count: 0 },
+  ];
 
   constructor(
     private mapService: InteractiveMapService,
@@ -46,10 +59,8 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    //this.ngZone.runOutsideAngular(()=>{
     this.initMap();
     this.addPointerMoveInteraction();
-    //})
   }
 
   initMap() {
@@ -69,7 +80,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       ],
       view: new View({
         center: [0, 0],
-        zoom: 2
+        zoom: 1
       })
     });
 
@@ -101,11 +112,11 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       const baseImage = baseStyle.getImage() as CircleStyle;
       return new Style({
         image: new CircleStyle({
-          radius: baseImage.getRadius() * 1.5, // Aumenta el tamaño
+          radius: baseImage.getRadius() * 1.5,
           fill: baseImage.getFill() || undefined,
           stroke: new Stroke({
-            color: 'yellow', // Cambia el color del borde
-            width: 3 // Aumenta el ancho del borde
+            color: 'yellow',
+            width: 3
           })
         })
       });
@@ -122,7 +133,6 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
         this.selectedFeature = feature.getProperties()['properties'] as FeatureProperties;
         console.log(this.selectedFeature);
 
-        // Guardar el estilo original y aplicar el estilo de selección
         const originalStyle = feature.getStyle() as Style;
         feature.set('originalStyle', originalStyle);
         feature.setStyle(createSelectedStyle(originalStyle));
@@ -148,6 +158,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     this.mapService.getAddress(32).subscribe(
       (response: any) => {
         if (response.status === 200) {
+          this.clearExistingPoints();
           this.addPointsToMapAddresFounded(response.direcciones_salida);
           this.numberOfAddresses = response.direcciones_salida.length;
           this.numberOfNotValidAddresses = response.direcciones_ne.length;
@@ -161,9 +172,16 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     );
   }
 
+  clearExistingPoints() {
+    if (this.vectorSource) {
+      this.vectorSource.clear();
+    }
+  }
+
   addPointsToMapAddresFounded(addresses: any[]) {
     let validAddresses = 0;
-    let s1 = 0, s2 = 0, s3 = 0, s4 = 0, s5 = 0, s6 = 0, n1 = 0, c1 = 0, ng = 0, sd = 0;
+
+    this.legendItems.forEach(item => item.count = 0);
 
     const features: Feature<Point>[] = addresses.reduce((acc: Feature<Point>[], address) => {
       if (address.coordx && address.coordy) {
@@ -174,142 +192,38 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
           properties: address
         });
 
-        let style: Style;
-        switch (address.georesultado) {
-          case 'S1':
-            style = new Style({
-              image: new CircleStyle({
-                radius: 5,
-                fill: new Fill({ color: '#365E32' }),
-                stroke: new Stroke({ color: 'white', width: 2 })
-              })
-            });
-            s1++;
-            break;
-          case 'S2':
-            style = new Style({
-              image: new CircleStyle({
-                radius: 5,
-                fill: new Fill({ color: 'black' }),
-                stroke: new Stroke({ color: 'white', width: 2 })
-              })
-            });
-            s2++;
-            break;
-          case 'S3':
-            style = new Style({
-              image: new CircleStyle({
-                radius: 5,
-                fill: new Fill({ color: '#06D001' }),
-                stroke: new Stroke({ color: 'white', width: 2 })
-              })
-            });
-            s3++;
-            break;
-          case 'S4':
-            style = new Style({
-              image: new CircleStyle({
-                radius: 5,
-                fill: new Fill({ color: '#0F67B1' }),
-                stroke: new Stroke({ color: 'white', width: 2 })
-              })
-            });
-            s4++;
-            break;
-          case 'S5':
-            style = new Style({
-              image: new CircleStyle({
-                radius: 5,
-                fill: new Fill({ color: '#3FA2F6' }),
-                stroke: new Stroke({ color: 'white', width: 2 })
-              })
-            });
-            s5++;
-            break;
-          case 'S6':
-            style = new Style({
-              image: new CircleStyle({
-                radius: 5,
-                fill: new Fill({ color: '#A7E6FF' }),
-                stroke: new Stroke({ color: 'white', width: 2 })
-              })
-            });
-            s6++;
-            break;
-          case 'N1':
-            style = new Style({
-              image: new CircleStyle({
-                radius: 5,
-                fill: new Fill({ color: '#FFDB00' }),
-                stroke: new Stroke({ color: 'white', width: 2 })
-              })
-            });
-            n1++;
-            break;
-          case 'C1':
-            style = new Style({
-              image: new CircleStyle({
-                radius: 5,
-                fill: new Fill({ color: '#FFAA80' }),
-                stroke: new Stroke({ color: 'white', width: 2 })
-              })
-            });
-            c1++;
-            break;
-          case 'NG':
-            style = new Style({
-              image: new CircleStyle({
-                radius: 5,
-                fill: new Fill({ color: 'red' }),
-                stroke: new Stroke({ color: 'white', width: 2 })
-              })
-            });
-            ng++;
-            break;
-          case 'SD':
-            style = new Style({
-              image: new CircleStyle({
-                radius: 5,
-                fill: new Fill({ color: '#686D76' }),
-                stroke: new Stroke({ color: 'white', width: 2 })
-              })
-            });
-            sd++;
-            break;
-          case null:
-            style = new Style({
-              image: new CircleStyle({
-                radius: 5,
-                fill: new Fill({ color: '#FF8F00' }),
-                stroke: new Stroke({ color: 'white', width: 2 })
-              })
-            });
-            sd++;
-            break;
-          default:
-            console.log('address.georesultado not found');
-            return acc; // Skip this feature if georesultado is not recognized
+        const legendItem = this.legendItems.find(item => item.georesultado === address.georesultado);
+        if (legendItem) {
+          legendItem.count++;
+          const style = new Style({
+            image: new CircleStyle({
+              radius: 4,
+              fill: new Fill({ color: legendItem.color }),
+              stroke: new Stroke({ color: 'white', width: 1 })
+            })
+          });
+          feature.setStyle(style);
+          feature.set('originalStyle', style);
+          acc.push(feature);
         }
-
-        feature.setStyle(style);
-        feature.set('originalStyle', style);
-        acc.push(feature);
       }
       return acc;
     }, []);
 
     console.log('Direcciones válidas procesadas:', validAddresses);
-    console.log('S1:', s1, ', S2:', s2, ', S3:', s3, ', S4:', s4, ', S5:', s5, ', S6:', s6, ', N1:', n1, ', C1:', c1, ', NG:', ng, ', SD:', sd);
 
     this.vectorSource.addFeatures(features);
 
     if (features.length > 0 && this.map && this.map.getView()) {
       this.map.getView().fit(this.vectorSource.getExtent(), {
-        padding: [50, 50, 50, 50]
+        padding: [50, 50, 50, 50],
+        duration: 1000
       });
     } else {
       console.error('Map or map view is not initialized');
     }
+
+    this.cd.detectChanges();
   }
 
   editarInformacionSalida() {
@@ -352,13 +266,13 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
 
     this.mapService.actualizarDireccion(actualizacion).subscribe(
       response => {
-        console.log('Direccion actualizada:', actualizacion);
         console.log('Dirección actualizada exitosamente:', response);
         this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Dirección actualizada correctamente' });
         this.ngZone.run(() => {
           this.inputDisabled = true;
           this.buttonDisabledSave = true;
           this.buttonDisabledEdit = false;
+          this.getDireccionesSalida();
           this.cd.detectChanges();
         });
       },
@@ -367,6 +281,37 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
         console.error('Error al actualizar la dirección:', error);
       }
     );
+  }
+
+  filterByGeoresultado(georesultado: string) {
+    const features = this.vectorSource.getFeatures();
+    features.forEach(feature => {
+      const properties = feature.getProperties()['properties'];
+      if (properties.georesultado === georesultado) {
+        feature.setStyle(feature.get('originalStyle'));
+        this.cerrarDialog();
+      } else {
+        feature.setStyle(new Style({}));
+      }
+    });
+  }
+
+  showAllPoints() {
+    const features = this.vectorSource.getFeatures();
+    features.forEach(feature => {
+      feature.setStyle(feature.get('originalStyle'));
+      this.cerrarDialog();
+    });
+  }
+
+  cerrarDialog() {
+    this.ngZone.run(() => {
+      this.inputDisabled = true;
+      this.buttonDisabledSave = true;
+      this.buttonDisabledEdit = false;
+      this.displayDialog = false;
+      this.cd.detectChanges();
+    });
   }
 
 }

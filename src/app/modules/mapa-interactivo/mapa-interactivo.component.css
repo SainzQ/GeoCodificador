@@ -13,6 +13,57 @@
     z-index: 0;
 }
 
+.legend {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 10px 10px;
+    border-radius: 8px;
+    z-index: 1000;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 80%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.legend-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin: 0 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+
+.legend-item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.all-item {
+    font-weight: bold;
+}
+
 :host ::ng-deep .p-dialog {
     position: fixed !important;
     right: 1vw !important;
@@ -24,3 +75,17 @@
     overflow-y: auto;
 }
 
+.button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.button-container p-button {
+    margin: 0 5px;
+}
+
+.editing-input {
+    border-color: #FFA500 !important;
+    border-width: 0.12rem;
+}

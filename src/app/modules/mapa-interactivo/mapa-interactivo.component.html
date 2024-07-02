@@ -1,4 +1,26 @@
-<div id="map" #map style="width: 100vw; height: 100vh;" [style.cursor]="cursorStyle"></div>
+<div id="map" #map style="width: 100vw; height: 100vh; z-index: 0;" [style.cursor]="cursorStyle"></div>
+
+<div class="legend">
+    <div class="legend-row">
+        <div class="legend-item all-item" (click)="showAllPoints()">
+            <div class="legend-color" style="background-color: #C2DED1;"></div>
+            Todos
+        </div>
+        <div class="legend-item" *ngFor="let item of legendItems.slice(0, 5)"
+            (click)="filterByGeoresultado(item.georesultado)">
+            <div class="legend-color" [style.background-color]="item.color"></div>
+            {{item.label}} ({{item.count}})
+        </div>
+    </div>
+    <div class="legend-row">
+        <div class="legend-item" *ngFor="let item of legendItems.slice(5)"
+            (click)="filterByGeoresultado(item.georesultado)">
+            <div class="legend-color" [style.background-color]="item.color"></div>
+            {{item.label}} ({{item.count}})
+        </div>
+    </div>
+</div>
+<p-toast></p-toast>
 <p-dialog header="Información del punto" [(visible)]="displayDialog"
     [style]="{width: '30vw', height: '100vh', right: '0', top: '0', margin: '0'}" [draggable]="false"
     [resizable]="false" [modal]="false" position="right" [closeOnEscape]="false" [closable]="false">
@@ -6,81 +28,95 @@
         <div class="p-grid p-fluid">
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
-                    <label>Nombre</label>
-                    <input pInputText [(ngModel)]="selectedFeature.nombre" [disabled]="inputDisabled">
+                    <label><b>Nombre</b></label>
+                    <input pInputText [(ngModel)]="selectedFeature.nombre" [disabled]="inputDisabled"
+                        [ngClass]="{'editing-input': !inputDisabled}">
                 </div>
             </div>
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
-                    <label>Dirección</label>
-                    <input pInputText [(ngModel)]="selectedFeature.calle" [disabled]="inputDisabled">
+                    <label><b>Calle</b></label>
+                    <input pInputText [(ngModel)]="selectedFeature.calle" [disabled]="inputDisabled"
+                        [ngClass]="{'editing-input': !inputDisabled}">
                 </div>
                 <div class="p-field">
-                    <label>Número Exterior</label>
-                    <input pInputText [(ngModel)]="selectedFeature.numero_exterior" [disabled]="inputDisabled">
-                </div>
-            </div>
-            <div class="p-col-12 p-md-6">
-                <div class="p-field">
-                    <label>Colonia</label>
-                    <input pInputText [(ngModel)]="selectedFeature.colonia" [disabled]="inputDisabled">
+                    <label><b>Número Exterior</b></label>
+                    <input pInputText [(ngModel)]="selectedFeature.numero_exterior" [disabled]="inputDisabled"
+                        [ngClass]="{'editing-input': !inputDisabled}">
                 </div>
             </div>
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
-                    <label>Código Postal</label>
-                    <input pInputText [(ngModel)]="selectedFeature.codigo_postal" [disabled]="inputDisabled">
+                    <label><b>Colonia</b></label>
+                    <input pInputText [(ngModel)]="selectedFeature.colonia" [disabled]="inputDisabled"
+                        [ngClass]="{'editing-input': !inputDisabled}">
                 </div>
             </div>
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
-                    <label>Municipio</label>
-                    <input pInputText [(ngModel)]="selectedFeature.municipio" [disabled]="inputDisabled">
+                    <label><b>Código Postal</b></label>
+                    <input pInputText [(ngModel)]="selectedFeature.codigo_postal" [disabled]="inputDisabled"
+                        [ngClass]="{'editing-input': !inputDisabled}">
                 </div>
             </div>
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
-                    <label>Estado</label>
-                    <input pInputText [(ngModel)]="selectedFeature.estado" [disabled]="inputDisabled">
+                    <label><b>Municipio</b></label>
+                    <input pInputText [(ngModel)]="selectedFeature.municipio" [disabled]="inputDisabled"
+                        [ngClass]="{'editing-input': !inputDisabled}">
                 </div>
             </div>
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
-                    <label>Región</label>
-                    <input pInputText [(ngModel)]="selectedFeature.region" [disabled]="inputDisabled">
+                    <label><b>Estado</b></label>
+                    <input pInputText [(ngModel)]="selectedFeature.estado" [disabled]="inputDisabled"
+                        [ngClass]="{'editing-input': !inputDisabled}">
                 </div>
             </div>
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
-                    <label>Teléfono</label>
-                    <input pInputText [(ngModel)]="selectedFeature.telefono" [disabled]="inputDisabled">
+                    <label><b>Región</b></label>
+                    <input pInputText [(ngModel)]="selectedFeature.region" [disabled]="inputDisabled"
+                        [ngClass]="{'editing-input': !inputDisabled}">
                 </div>
             </div>
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
-                    <label>Georesultado</label>
-                    <input pInputText [(ngModel)]="selectedFeature.georesultado" [disabled]="inputDisabled">
+                    <label><b>Teléfono</b></label>
+                    <input pInputText [(ngModel)]="selectedFeature.telefono" [disabled]="inputDisabled"
+                        [ngClass]="{'editing-input': !inputDisabled}">
                 </div>
             </div>
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
-                    <label>NSE</label>
-                    <input pInputText [(ngModel)]="selectedFeature.nse" [disabled]="inputDisabled">
+                    <label><b>Georesultado</b></label>
+                    <input pInputText [(ngModel)]="selectedFeature.georesultado" [disabled]="inputDisabled"
+                        [ngClass]="{'editing-input': !inputDisabled}">
                 </div>
             </div>
             <div class="p-col-12 p-md-6">
                 <div class="p-field">
-                    <label>Scoring</label>
-                    <input pInputText [(ngModel)]="selectedFeature.scoring" [disabled]="inputDisabled">
+                    <label><b>NSE</b></label>
+                    <input pInputText [(ngModel)]="selectedFeature.nse" [disabled]="inputDisabled"
+                        [ngClass]="{'editing-input': !inputDisabled}">
+                </div>
+            </div>
+            <div class="p-col-12 p-md-6">
+                <div class="p-field">
+                    <label><b>Scoring</b></label>
+                    <input pInputText [(ngModel)]="selectedFeature.scoring" [disabled]="inputDisabled"
+                        [ngClass]="{'editing-input': !inputDisabled}">
                 </div>
             </div>
         </div>
     </ng-container>
     <ng-template pTemplate="footer">
-        <p-button icon="pi pi-pencil" (click)="editarInformacionSalida()" label="Editar" styleClass="p-button-text"
-            [disabled]="buttonDisabledEdit"></p-button>
-        <p-button icon="pi pi-save" (click)="actualizarInformacionSalida()" label="Guardar" styleClass="p-button-text"
-            [disabled]="buttonDisabledSave"></p-button>
-        <p-button icon="pi pi-check" (click)="displayDialog=false" label="Cerrar" styleClass="p-button-text"></p-button>
+        <div class="button-container">
+            <p-button icon="pi pi-pencil" (click)="editarInformacionSalida()" label="Editar" styleClass="p-button-text"
+                [disabled]="buttonDisabledEdit" severity="warning"></p-button>
+            <p-button icon="pi pi-save" (click)="actualizarInformacionSalida()" label="Afinar"
+                styleClass="p-button-text" [disabled]="buttonDisabledSave" severity="success"></p-button>
+            <p-button icon="pi pi-check" (click)="cerrarDialog()" label="Cerrar" styleClass="p-button-text"></p-button>
+        </div>
     </ng-template>
 </p-dialog>
