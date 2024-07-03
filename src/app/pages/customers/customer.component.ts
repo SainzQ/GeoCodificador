@@ -40,8 +40,8 @@ export class CustomerComponent implements OnInit {
       { label: 'ID Usuario', def: 'id_usuario', dataKey: 'id_usuario' },
       { label: 'Número de Registros', def: 'numero_registros', dataKey: 'numero_registros' },
       { label: 'Resultado del Proceso', def: 'resultado_proceso', dataKey: 'resultado_proceso' },
-      { label: 'Fecha de Creación', def: 'fecha_creacion', dataKey: 'fecha_creacion', dataType: 'date', formatt: 'dd MMM yyyy' },
-      { label: 'Fecha de Geocodificación', def: 'fecha_geocodificacion', dataKey: 'fecha_geocodificacion', dataType: 'date', formatt: 'dd MMM yyyy' },
+      { label: 'Fecha de Creación', def: 'fecha_creacion', dataKey: 'fecha_creacion', dataType: 'date', format: 'DD-MMM-YYYYTHH:MM:SS' },
+      { label: 'Fecha de Geocodificación', def: 'fecha_geocodificacion', dataKey: 'fecha_geocodificacion', dataType: 'date', format: 'DD-MMM-YYYYTHH:MM:SS' },
       { label: 'Estatus de Geocodificación', def: 'estatus_geocodificacion', dataKey: 'estatus_geocodificacion' }
     ];
   }

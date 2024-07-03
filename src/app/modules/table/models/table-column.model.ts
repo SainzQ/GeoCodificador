@@ -2,8 +2,7 @@ export interface TableColumn {
     label: string;
     def: string;
     dataKey: string;
-    formatt?: string;
+    format?: string;
     dataType?: 'date' | 'object';
     // data?: any[]
   }
-  

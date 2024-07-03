@@ -35,6 +35,7 @@ export class SeleccionarDatosComponent {
           { label: 'ID Domicilio', value: 'id_req' },
           { label: 'Calle', value: 'calle' },
           { label: 'Municipio', value: 'municipio' },
+          { label: 'Estado', value: 'estado' },
         ]
       },
       {
@@ -43,7 +44,6 @@ export class SeleccionarDatosComponent {
         items: [
           { label: 'Colonia', value: 'colonia' },
           { label: 'Region', value: 'region' },
-          { label: 'Estado', value: 'estado' },
           { label: 'Codigo Postal', value: 'codigo_postal' },
           { label: 'Número Exterior', value: 'numero_exterior' },
           { label: 'Número Interior', value: 'numero_interior' },

@@ -33,17 +33,17 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   public buttonDisabledEdit: boolean = false;
   public buttonDisabledSave: boolean = true;
   public legendItems = [
-    { georesultado: 'S1', color: '#059212', label: 'S1', count: 0 },
-    { georesultado: 'S2', color: '#06D001', label: 'S2', count: 0 },
-    { georesultado: 'S3', color: '#9BEC00', label: 'S3', count: 0 },
-    { georesultado: 'S4', color: '#4C3BCF', label: 'S4', count: 0 },
-    { georesultado: 'S5', color: '#3FA2F6', label: 'S5', count: 0 },
-    { georesultado: 'S6', color: '#A7E6FF', label: 'S6', count: 0 },
-    { georesultado: 'N1', color: '#FFDB00', label: 'N1', count: 0 },
-    { georesultado: 'C1', color: '#FF9A00', label: 'C1', count: 0 },
-    { georesultado: 'NG', color: 'red', label: 'NG', count: 0 },
-    { georesultado: 'SD', color: 'black', label: 'SD', count: 0 },
-    { georesultado: 'ED', color: '#15F5BA', label: 'ED', count: 0 },
+    { georesultado: 'S1', color: '#059212', label: 'S1', description: '', count: 0 },
+    { georesultado: 'S2', color: '#06D001', label: 'S2', description: '', count: 0 },
+    { georesultado: 'S3', color: '#9BEC00', label: 'S3', description: '', count: 0 },
+    { georesultado: 'S4', color: '#4C3BCF', label: 'S4', description: '', count: 0 },
+    { georesultado: 'S5', color: '#3FA2F6', label: 'S5', description: '', count: 0 },
+    { georesultado: 'S6', color: '#A7E6FF', label: 'S6', description: '', count: 0 },
+    { georesultado: 'N1', color: '#FFDB00', label: 'N1', description: '', count: 0 },
+    { georesultado: 'C1', color: '#FF9A00', label: 'C1', description: '', count: 0 },
+    { georesultado: 'NG', color: 'red', label: 'NG', description: '', count: 0 },
+    { georesultado: 'SD', color: 'black', label: 'SD', description: '', count: 0 },
+    { georesultado: 'ED', color: '#15F5BA', label: 'ED', description: '', count: 0 },
   ];
   public allPoints: any[] = [];
   public direccionesSalida: any[] = [];
@@ -180,7 +180,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
 
   selectPoint(point: any, isDireccionSalida: boolean) {
     if (isDireccionSalida) {
-      const feature = this.vectorSource.getFeatures().find(f => 
+      const feature = this.vectorSource.getFeatures().find(f =>
         f.getProperties()['properties'].id_direccion_salida === point.id_direccion_salida
       );
 

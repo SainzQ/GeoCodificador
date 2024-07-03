@@ -9,4 +9,3 @@ export interface Customer {
     fecha_geocodificacion: Date;
     estatus_geocodificacion: string;
   }
-  
