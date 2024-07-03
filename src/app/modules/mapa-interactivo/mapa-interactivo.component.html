@@ -1,11 +1,65 @@
-<div id="map" #map style="width: 100vw; height: 100vh; z-index: 0;" [style.cursor]="cursorStyle"></div>
+<div id="map" #map [style.cursor]="cursorStyle"></div>
 
+<div class="info-panel p-shadow-5">
+    <h2 class="panel-title">Tablero de GeoResultados</h2>
+    <p-tabView>
+        <p-tabPanel header="Direcciones de salida ({{direccionesSalida.length}})">
+            <p-table [value]="direccionesSalida" [paginator]="true" [rows]="3" [showCurrentPageReport]="true"
+                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} entradas"
+                [rowsPerPageOptions]="[4,8,16]" styleClass="p-datatable-sm p-datatable-striped">
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Dirección</th>
+                        <th>Georesultado</th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-point>
+                    <tr (click)="selectPoint(point, true)" class="point-item">
+                        <td>{{point.nombre}}</td>
+                        <td>
+                            <small>
+                                {{point.calle}} {{point.numero_exterior}}, {{point.colonia}}<br>
+                                {{point.municipio}}, {{point.estado}}
+                            </small>
+                        </td>
+                        <td><span class="georesultado-badge">{{point.georesultado}}</span></td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </p-tabPanel>
+
+        <p-tabPanel header="Direcciones no encontradas ({{direccionesNE.length}})">
+            <p-table [value]="direccionesNE" [paginator]="true" [rows]="3" [showCurrentPageReport]="true"
+                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} entradas"
+                [rowsPerPageOptions]="[8,16,24]" styleClass="p-datatable-sm p-datatable-striped">
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Dirección</th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-point>
+                    <tr (click)="selectPoint(point, false)" class="point-item">
+                        <td>{{point.nombre}}</td>
+                        <td>
+                            <small>
+                                {{point.calle}} {{point.numero_exterior}}, {{point.colonia}}<br>
+                                {{point.municipio}}, {{point.estado}}
+                            </small>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </p-tabPanel>
+    </p-tabView>
+</div>
 <div class="legend">
     <h2 style="font-weight: bold; font-size: 1.2em; margin-bottom: 10px;">Tablero de GeoResultados</h2>
     <div class="legend-row">
         <div class="legend-item all-item" (click)="showAllPoints()">
             <div class="legend-color" style="background-color: #C2DED1;"></div>
-            Todos
+            Todos ({{totalNumberOfAddresses}})
         </div>
         <div class="legend-item" *ngFor="let item of legendItems | slice:0:6"
             (click)="filterByGeoresultado(item.georesultado)">

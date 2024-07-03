@@ -45,6 +45,10 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     { georesultado: 'SD', color: 'black', label: 'SD', count: 0 },
     { georesultado: 'ED', color: '#15F5BA', label: 'ED', count: 0 },
   ];
+  public allPoints: any[] = [];
+  public direccionesSalida: any[] = [];
+  public direccionesNE: any[] = [];
+  public totalNumberOfAddresses: number = 0;
 
   constructor(
     private mapService: InteractiveMapService,
@@ -159,17 +163,80 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       (response: any) => {
         if (response.status === 200) {
           this.clearExistingPoints();
+          this.direccionesSalida = response.direcciones_salida;
+          this.direccionesNE = response.direcciones_ne;
           this.addPointsToMapAddresFounded(response.direcciones_salida);
           this.numberOfAddresses = response.direcciones_salida.length;
           this.numberOfNotValidAddresses = response.direcciones_ne.length;
-          let totalNumberOfAddresses = response.direcciones_salida.length + response.direcciones_ne.length;
-          console.log('Número de direcciones totales:', totalNumberOfAddresses)
+          this.totalNumberOfAddresses = response.direcciones_salida.length + response.direcciones_ne.length;
+          console.log('Número de direcciones totales:', this.totalNumberOfAddresses);
           console.log('Número de direcciones encontradas:', this.numberOfAddresses);
           console.log('Número de direcciones no encontradas:', this.numberOfNotValidAddresses);
         }
       },
       error => console.error('Error fetching addresses:', error)
     );
+  }
+
+  selectPoint(point: any, isDireccionSalida: boolean) {
+    if (isDireccionSalida) {
+      const feature = this.vectorSource.getFeatures().find(f => 
+        f.getProperties()['properties'].id_direccion_salida === point.id_direccion_salida
+      );
+
+      if (feature) {
+        const geometry = feature.getGeometry();
+        if (geometry && geometry instanceof Point) {
+          this.map.getView().animate({
+            center: geometry.getCoordinates(),
+            zoom: 18,
+            duration: 1000
+          });
+          this.handleFeatureSelection(feature as Feature<Point>);
+        }
+      }
+    } else {
+      console.log('Dirección no encontrada:', point);
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Dirección no encontrada',
+        detail: 'Esta dirección no se puede mostrar en el mapa.'
+      });
+    }
+  }
+
+  handleFeatureSelection(feature: Feature<Point>) {
+    if (this.previousSelectedFeature) {
+      this.previousSelectedFeature.setStyle(this.previousSelectedFeature.get('originalStyle'));
+    }
+
+    const geometry = feature.getGeometry();
+    if (geometry) {
+      const coordinates = geometry.getCoordinates();
+      this.selectedFeature = feature.getProperties()['properties'] as FeatureProperties;
+
+      const originalStyle = feature.getStyle() as Style;
+      feature.set('originalStyle', originalStyle);
+      feature.setStyle(this.createSelectedStyle(originalStyle));
+      this.previousSelectedFeature = feature;
+
+      this.displayDialog = true;
+      this.overlay.setPosition(coordinates);
+    }
+  }
+
+  createSelectedStyle(baseStyle: Style) {
+    const baseImage = baseStyle.getImage() as CircleStyle;
+    return new Style({
+      image: new CircleStyle({
+        radius: baseImage.getRadius() * 1.5,
+        fill: baseImage.getFill() || undefined,
+        stroke: new Stroke({
+          color: 'yellow',
+          width: 3
+        })
+      })
+    });
   }
 
   clearExistingPoints() {

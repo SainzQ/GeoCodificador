@@ -18,6 +18,7 @@ import { ConfirmPopupModule } from 'primeng/confirmpopup';
 import { HttpClientModule } from '@angular/common/http';
 import { DialogModule } from 'primeng/dialog';
 import { FileUploadModule } from 'primeng/fileupload';
+import { TabViewModule } from 'primeng/tabview';
 
 // For dynamic progressbar demo
 import { MessageService } from 'primeng/api';
@@ -72,7 +73,8 @@ import { MapaInteractivoComponent } from './mapa-interactivo/mapa-interactivo.co
         DialogModule,
         ProgressSpinnerModule,
         FileUploadModule,
-        InputSwitchModule
+        InputSwitchModule,
+        TabViewModule
     ],
     exports: [
         TableComponent,
