@@ -397,6 +397,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
         console.error('Error al actualizar la dirección:', error);
       }
     );
+    this.getDireccionesSalida();
   }
 
   filterByGeoresultado(georesultado: string) {
