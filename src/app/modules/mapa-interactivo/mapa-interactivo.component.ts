@@ -33,22 +33,24 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   public buttonDisabledEdit: boolean = false;
   public buttonDisabledSave: boolean = true;
   public legendItems = [
-    { georesultado: 'S1', color: '#059212', label: 'S1', description: '', count: 0 },
-    { georesultado: 'S2', color: '#06D001', label: 'S2', description: '', count: 0 },
-    { georesultado: 'S3', color: '#9BEC00', label: 'S3', description: '', count: 0 },
-    { georesultado: 'S4', color: '#4C3BCF', label: 'S4', description: '', count: 0 },
-    { georesultado: 'S5', color: '#3FA2F6', label: 'S5', description: '', count: 0 },
-    { georesultado: 'S6', color: '#A7E6FF', label: 'S6', description: '', count: 0 },
-    { georesultado: 'N1', color: '#FFDB00', label: 'N1', description: '', count: 0 },
-    { georesultado: 'C1', color: '#FF9A00', label: 'C1', description: '', count: 0 },
-    { georesultado: 'NG', color: 'red', label: 'NG', description: '', count: 0 },
-    { georesultado: 'SD', color: 'black', label: 'SD', description: '', count: 0 },
-    { georesultado: 'ED', color: '#15F5BA', label: 'ED', description: '', count: 0 },
+    { georesultado: 'S1', color: '#059212', border: 'white', label: 'S1', count: 0, percentage: 0 },
+    { georesultado: 'S2', color: '#06D001', border: 'white', label: 'S2', count: 0, percentage: 0 },
+    { georesultado: 'S3', color: '#9BEC00', border: 'white', label: 'S3', count: 0, percentage: 0 },
+    { georesultado: 'S4', color: '#4C3BCF', border: 'white', label: 'S4', count: 0, percentage: 0 },
+    { georesultado: 'S5', color: '#3FA2F6', border: 'white', label: 'S5', count: 0, percentage: 0 },
+    { georesultado: 'S6', color: '#A7E6FF', border: 'white', label: 'S6', count: 0, percentage: 0 },
+    { georesultado: 'N1', color: '#FFDB00', border: 'white', label: 'N1', count: 0, percentage: 0 },
+    { georesultado: 'C1', color: '#FF9A00', border: 'white', label: 'C1', count: 0, percentage: 0 },
+    { georesultado: 'NG', color: 'red', border: 'white', label: 'NG', count: 0, percentage: 0 },
+    { georesultado: 'SD', color: 'black', border: 'white', label: 'SD', count: 0, percentage: 0 },
+    { georesultado: 'ED', color: '#15F5BA', border: 'black', label: 'ED', count: 0, percentage: 0 },
   ];
   public allPoints: any[] = [];
   public direccionesSalida: any[] = [];
   public direccionesNE: any[] = [];
   public totalNumberOfAddresses: number = 0;
+  chartData: any;
+  chartOptions: any;
 
   constructor(
     private mapService: InteractiveMapService,
@@ -60,6 +62,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     this.getDireccionesSalida();
+    this.initializeChart();
   }
 
   ngAfterViewInit() {
@@ -176,6 +179,42 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       },
       error => console.error('Error fetching addresses:', error)
     );
+    this.updateChartData();
+  }
+
+  initializeChart() {
+    this.chartOptions = {
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: (context: any) => {
+              const label = context.label || '';
+              const value = context.raw || 0;
+              const total = context.chart.data.datasets[0].data.reduce((a: number, b: number) => a + b, 0);
+              const percentage = ((value / total) * 100).toFixed(2);
+              return `${label}: ${value} (${percentage}%)`;
+            }
+          }
+        }
+      },
+      responsive: true,
+      maintainAspectRatio: false
+    };
+  }
+
+  updateChartData() {
+    this.chartData = {
+      labels: this.legendItems.map(item => item.label),
+      datasets: [{
+        data: this.legendItems.map(item => item.count),
+        backgroundColor: this.legendItems.map(item => item.color),
+        borderColor: this.legendItems.map(item => item.border),
+        borderWidth: 1
+      }]
+    };
   }
 
   selectPoint(point: any, isDireccionSalida: boolean) {
@@ -248,7 +287,9 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   addPointsToMapAddresFounded(addresses: any[]) {
     let validAddresses = 0;
 
-    this.legendItems.forEach(item => item.count = 0);
+    this.legendItems.forEach(item => {
+      item.percentage = (item.count / validAddresses) * 100;
+    });
 
     const features: Feature<Point>[] = addresses.reduce((acc: Feature<Point>[], address) => {
       if (address.coordx && address.coordy) {
@@ -280,6 +321,10 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       return acc;
     }, []);
 
+    this.legendItems.forEach(item => {
+      item.percentage = (item.count / validAddresses) * 100;
+    });
+
     console.log('Direcciones válidas procesadas:', validAddresses);
 
     this.vectorSource.addFeatures(features);
@@ -293,6 +338,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       console.error('Map or map view is not initialized');
     }
 
+    this.updateChartData();
     this.cd.detectChanges();
   }
 
@@ -351,6 +397,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
         console.error('Error al actualizar la dirección:', error);
       }
     );
+    this.getDireccionesSalida();
   }
 
   filterByGeoresultado(georesultado: string) {

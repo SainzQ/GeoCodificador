@@ -55,23 +55,21 @@
     </p-tabView>
 </div>
 <div class="legend">
-    <h2 style="font-weight: bold; font-size: 1.2em; margin-bottom: 10px;">Tablero de GeoResultados</h2>
-    <div class="legend-row">
-        <div class="legend-item all-item" (click)="showAllPoints()">
-            <div class="legend-color" style="background-color: #C2DED1;"></div>
-            Todos ({{totalNumberOfAddresses}})
+    <h2 class="legend-title">Tablero de GeoResultados</h2>
+    <div class="legend-content">
+        <div class="legend-items">
+            <div class="legend-item all-item" (click)="showAllPoints()">
+                <div class="legend-color" style="background-color: #F0F0F0;"></div>
+                <span>Todos ({{totalNumberOfAddresses}})</span>
+            </div>
+            <div class="legend-item" *ngFor="let item of legendItems" (click)="filterByGeoresultado(item.georesultado)">
+                <div class="legend-color" [style.background-color]="item.color" [style.border-color]="item.border">
+                </div>
+                <span>{{item.label}} ({{item.count}} - {{item.percentage | number:'1.0-2'}}%)</span>
+            </div>
         </div>
-        <div class="legend-item" *ngFor="let item of legendItems | slice:0:6"
-            (click)="filterByGeoresultado(item.georesultado)">
-            <div class="legend-color" [style.background-color]="item.color"></div>
-            {{item.label}} ({{item.count}})
-        </div>
-    </div>
-    <div class="legend-row">
-        <div class="legend-item" *ngFor="let item of legendItems | slice:6"
-            (click)="filterByGeoresultado(item.georesultado)">
-            <div class="legend-color" [style.background-color]="item.color"></div>
-            {{item.label}} ({{item.count}})
+        <div class="legend-chart">
+            <p-chart type="pie" [data]="chartData" [options]="chartOptions"></p-chart>
         </div>
     </div>
 </div>

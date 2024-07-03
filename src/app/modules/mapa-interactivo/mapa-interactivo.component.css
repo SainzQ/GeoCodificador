@@ -77,53 +77,74 @@
 
 .legend {
     position: absolute;
-    top: 20px;
+    top: 10px;
     left: 50%;
     transform: translateX(-50%);
-    background-color:#373A40;
-    padding: 10px 10px;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 10px;
     border-radius: 8px;
     z-index: 1000;
-    font-size: 14px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     max-width: 80%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: auto;
+    height: auto;
 }
 
-.legend-row {
+.legend-title {
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    text-align: center;
+    color: #333;
+}
+
+.legend-content {
     display: flex;
     justify-content: center;
-    align-items: center;
-    margin-bottom: 8px;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.legend-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    max-width: 70%;
 }
 
 .legend-item {
     display: flex;
     align-items: center;
-    margin: 0 8px;
+    background-color: #f5f5f5;
+    padding: 3px 8px;
+    border-radius: 15px;
     cursor: pointer;
-    white-space: nowrap;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: background-color 0.2s;
+    transition: background-color 0.3s ease;
+    font-size: 0.8em;
 }
 
 .legend-color {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    display: inline-block;
     margin-right: 6px;
+    border: 1px solid;
+    border-radius: 50%;
+}
+
+.legend-chart {
     flex-shrink: 0;
+    margin-top: -125px;
+    width: 150px;
+    height: 225px;
+    max-width: 100%;
+    max-height: 225px;
+    overflow: hidden;
 }
 
-.legend-item:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-}
-
-.all-item {
-    font-weight: bold;
+:host ::ng-deep .p-chart {
+    width: 100% !important;
+    height: 100% !important;
 }
 
 :host ::ng-deep .p-dialog {
