@@ -1,19 +1,20 @@
 <div id="map" #map style="width: 100vw; height: 100vh; z-index: 0;" [style.cursor]="cursorStyle"></div>
 
 <div class="legend">
+    <h2 style="font-weight: bold; font-size: 1.2em; margin-bottom: 10px;">Tablero de GeoResultados</h2>
     <div class="legend-row">
         <div class="legend-item all-item" (click)="showAllPoints()">
             <div class="legend-color" style="background-color: #C2DED1;"></div>
             Todos
         </div>
-        <div class="legend-item" *ngFor="let item of legendItems.slice(0, 5)"
+        <div class="legend-item" *ngFor="let item of legendItems | slice:0:6"
             (click)="filterByGeoresultado(item.georesultado)">
             <div class="legend-color" [style.background-color]="item.color"></div>
             {{item.label}} ({{item.count}})
         </div>
     </div>
     <div class="legend-row">
-        <div class="legend-item" *ngFor="let item of legendItems.slice(5)"
+        <div class="legend-item" *ngFor="let item of legendItems | slice:6"
             (click)="filterByGeoresultado(item.georesultado)">
             <div class="legend-color" [style.background-color]="item.color"></div>
             {{item.label}} ({{item.count}})

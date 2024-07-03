@@ -42,8 +42,8 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     { georesultado: 'N1', color: '#FFDB00', label: 'N1', count: 0 },
     { georesultado: 'C1', color: '#FF9A00', label: 'C1', count: 0 },
     { georesultado: 'NG', color: 'red', label: 'NG', count: 0 },
-    { georesultado: 'ED', color: '#15F5BA', label: 'ED', count: 0 },
     { georesultado: 'SD', color: 'black', label: 'SD', count: 0 },
+    { georesultado: 'ED', color: '#15F5BA', label: 'ED', count: 0 },
   ];
 
   constructor(
@@ -199,7 +199,10 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
             image: new CircleStyle({
               radius: 4,
               fill: new Fill({ color: legendItem.color }),
-              stroke: new Stroke({ color: 'white', width: 1 })
+              stroke: new Stroke({
+                color: address.georesultado === 'ED' ? 'black' : 'white',
+                width: address.georesultado === 'ED' ? 2 : 1
+              })
             })
           });
           feature.setStyle(style);
