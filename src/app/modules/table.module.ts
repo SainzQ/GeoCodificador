@@ -20,6 +20,7 @@ import { DialogModule } from 'primeng/dialog';
 import { FileUploadModule } from 'primeng/fileupload';
 import { TabViewModule } from 'primeng/tabview';
 import { ChartModule } from 'primeng/chart';
+import { OverlayPanelModule } from 'primeng/overlaypanel';
 
 // For dynamic progressbar demo
 import { MessageService } from 'primeng/api';
@@ -76,7 +77,8 @@ import { MapaInteractivoComponent } from './mapa-interactivo/mapa-interactivo.co
         FileUploadModule,
         InputSwitchModule,
         TabViewModule,
-        ChartModule
+        ChartModule,
+        OverlayPanelModule
     ],
     exports: [
         TableComponent,

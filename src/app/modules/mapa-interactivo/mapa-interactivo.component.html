@@ -11,10 +11,10 @@
                     <tr>
                         <th>Nombre</th>
                         <th>Dirección</th>
-                        <th>Georesultado</th>
+                        <th>Contador</th>
                     </tr>
                 </ng-template>
-                <ng-template pTemplate="body" let-point>
+                <ng-template pTemplate="body" let-point let-i="rowIndex">
                     <tr (click)="selectPoint(point, true)" class="point-item">
                         <td>{{point.nombre}}</td>
                         <td>
@@ -23,7 +23,12 @@
                                 {{point.municipio}}, {{point.estado}}
                             </small>
                         </td>
-                        <td><span class="georesultado-badge">{{point.georesultado}}</span></td>
+                        <td>
+                            <span class="contador-badge"
+                                [style.background-color]="getColorForGeoresultado(point.georesultado)">
+                                {{ i + 1 }}
+                            </span>
+                        </td>
                     </tr>
                 </ng-template>
             </p-table>
@@ -55,7 +60,12 @@
     </p-tabView>
 </div>
 <div class="legend">
-    <h2 class="legend-title">Tablero de GeoResultados</h2>
+    <div class="legend-header">
+        <div class="chart-icon">
+            <i class="pi pi-chart-pie" (click)="op.toggle($event)"></i>
+        </div>
+    </div>
+    <h2 class="legend-title">Leyendas de GeoResultados</h2>
     <div class="legend-content">
         <div class="legend-items">
             <div class="legend-item all-item" (click)="showAllPoints()">
@@ -68,11 +78,15 @@
                 <span>{{item.label}} ({{item.count}} - {{item.percentage | number:'1.0-2'}}%)</span>
             </div>
         </div>
-        <div class="legend-chart">
-            <p-chart type="pie" [data]="chartData" [options]="chartOptions"></p-chart>
-        </div>
     </div>
 </div>
+<p-overlayPanel #op>
+    <ng-template pTemplate>
+        <div class="chart-container">
+            <p-chart type="pie" [data]="chartData" [options]="chartOptions"></p-chart>
+        </div>
+    </ng-template>
+</p-overlayPanel>
 <p-toast></p-toast>
 <p-dialog header="Información del punto" [(visible)]="displayDialog"
     [style]="{width: '30vw', height: '100vh', right: '0', top: '0', margin: '0'}" [draggable]="false"

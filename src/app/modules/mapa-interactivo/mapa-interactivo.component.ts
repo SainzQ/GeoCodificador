@@ -12,6 +12,10 @@ import Overlay from 'ol/Overlay';
 import { FeatureProperties } from 'src/app/models/featureProperties.model';
 import { DireccionActualizacion } from 'src/app/models/address.model';
 import { MessageService } from 'primeng/api';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { ChartType, ChartData, ChartOptions, Chart } from 'chart.js';
+
+Chart.register(ChartDataLabels);
 
 @Component({
   selector: 'app-mapa-interactivo',
@@ -162,7 +166,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   }
 
   getDireccionesSalida() {
-    this.mapService.getAddress(32).subscribe(
+    this.mapService.getAddress(34).subscribe(
       (response: any) => {
         if (response.status === 200) {
           this.clearExistingPoints();
@@ -186,23 +190,42 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     this.chartOptions = {
       plugins: {
         legend: {
-          display: false
+          display: true,
+          position: 'bottom',
+          labels: {
+            usePointStyle: true,
+            padding: 20
+          }
         },
         tooltip: {
-          callbacks: {
-            label: (context: any) => {
-              const label = context.label || '';
-              const value = context.raw || 0;
-              const total = context.chart.data.datasets[0].data.reduce((a: number, b: number) => a + b, 0);
-              const percentage = ((value / total) * 100).toFixed(2);
-              return `${label}: ${value} (${percentage}%)`;
-            }
+          enabled: false
+        },
+        datalabels: {
+          color: '#ffffff',
+          anchor: 'center',
+          align: 'center',
+          formatter: (value: number, ctx: {
+            chart: { data: ChartData },
+            dataIndex: number,
+            dataset: { data: number[] }
+          }) => {
+            const dataset = ctx.dataset;
+            const total = dataset.data.reduce((acc: number, data: number) => acc + data, 0);
+            const percentage = (value / total) * 100;
+            const label = ctx.chart.data.labels?.[ctx.dataIndex] as string;
+
+            return percentage > 0.01 ? `${label}\n${percentage.toFixed(1)}%` : '';
+          },
+          font: {
+            weight: 'bold' as const,
+            size: 14
           }
         }
       },
       responsive: true,
-      maintainAspectRatio: false
-    };
+      maintainAspectRatio: false,
+      cutout: '40%'
+    } as ChartOptions<'pie'>;
   }
 
   updateChartData() {
@@ -210,11 +233,16 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       labels: this.legendItems.map(item => item.label),
       datasets: [{
         data: this.legendItems.map(item => item.count),
-        backgroundColor: this.legendItems.map(item => item.color),
-        borderColor: this.legendItems.map(item => item.border),
-        borderWidth: 1
+        backgroundColor: [
+          '#4CAF50', '#8BC34A', '#CDDC39',
+          '#2196F3', '#03A9F4', '#00BCD4',
+          '#FFC107', '#FF9800', '#FF5722',
+          '#000000', '#15F5BA'
+        ],
+        borderColor: '#ffffff',
+        borderWidth: 2
       }]
-    };
+    } as ChartData<'pie', number[], string>;
   }
 
   selectPoint(point: any, isDireccionSalida: boolean) {
@@ -429,6 +457,11 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       this.displayDialog = false;
       this.cd.detectChanges();
     });
+  }
+
+  getColorForGeoresultado(georesultado: string): string {
+    const legendItem = this.legendItems.find(item => item.georesultado === georesultado);
+    return legendItem ? legendItem.color : '#F0F0F0';
   }
 
 }
