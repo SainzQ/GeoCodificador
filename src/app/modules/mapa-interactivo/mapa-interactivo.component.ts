@@ -14,6 +14,7 @@ import { DireccionActualizacion } from 'src/app/models/address.model';
 import { MessageService } from 'primeng/api';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { ChartType, ChartData, ChartOptions, Chart } from 'chart.js';
+import { Router } from '@angular/router';
 
 Chart.register(ChartDataLabels);
 
@@ -55,16 +56,24 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   public totalNumberOfAddresses: number = 0;
   chartData: any;
   chartOptions: any;
+  selectedProject: any;
 
   constructor(
     private mapService: InteractiveMapService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private ngZone: NgZone,
     private cd: ChangeDetectorRef,
-    private messageService: MessageService
-  ) { }
+    private messageService: MessageService,
+    private router: Router
+  ) {
+    const navigation = this.router.getCurrentNavigation();
+    if (navigation?.extras.state) {
+      this.selectedProject = navigation.extras.state['proyecto'];
+    }
+   }
 
   ngOnInit() {
+    console.log('Proyecto seleccionado:', this.selectedProject.id_proyecto);
     this.getDireccionesSalida();
     this.initializeChart();
   }
@@ -166,7 +175,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   }
 
   getDireccionesSalida() {
-    this.mapService.getAddress(34).subscribe(
+    this.mapService.getAddress(this.selectedProject.id_proyecto).subscribe(
       (response: any) => {
         if (response.status === 200) {
           this.clearExistingPoints();

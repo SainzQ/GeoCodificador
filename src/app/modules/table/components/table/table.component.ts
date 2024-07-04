@@ -370,6 +370,13 @@ export class TableComponent implements OnInit, AfterViewInit {
   }
 
   navegarARuta(){
-    this.router.navigate(['gci']);
+    if (this.selection.selected.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Advertencia', detail: 'Por favor, seleccione un proyecto' });
+      return;
+    }
+    this.router.navigate(['gci'], {
+      state: { proyecto: this.selectedProject }
+    });
+
   }
 }

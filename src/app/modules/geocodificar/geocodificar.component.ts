@@ -67,7 +67,7 @@ export class GeocodificarComponent implements OnChanges {
         console.log(datosAEnviar);
         this.tableroService.geocodificarProyecto(datosAEnviar).subscribe(
           response => {
-            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Proyecto geocodificado correctamente' });
+            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Inicio de proceso de Geocodificado correctamente' });
             setTimeout(() => {
               window.location.reload();
             }, 2000);
@@ -75,14 +75,14 @@ export class GeocodificarComponent implements OnChanges {
 
           },
           error => {
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo geocodificar el proyecto, intentelo de nuevo mas tarde' });
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo iniciar el proceso de Geocodificado, intentelo de nuevo mas tarde' });
             // console.log(error);
 
           }
         );
       },
       reject: () => {
-        this.messageService.add({ severity: 'info', summary: 'Cancelado', detail: 'No se geocodificó el proyecto' });
+        this.messageService.add({ severity: 'info', summary: 'Cancelado', detail: 'No se inicio el proceso de Geocodificado' });
       }
     });
   }
