@@ -53,8 +53,10 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   public direccionesSalida: any[] = [];
   public direccionesNE: any[] = [];
   public totalNumberOfAddresses: number = 0;
-  chartData: any;
-  chartOptions: any;
+  public chartData: any;
+  public chartOptions: any;
+  public sortField: string = '';
+  public sortOrder: number = 1;
 
   constructor(
     private mapService: InteractiveMapService,
@@ -103,6 +105,32 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     this.map.addOverlay(this.overlay);
 
     this.map.on('click', (event) => this.handleMapClick(event));
+  }
+
+  onSort(event: any) {
+    this.sortField = event.field;
+    this.sortOrder = event.order;
+    this.sortDireccionesSalida();
+  }
+
+  sortDireccionesSalida() {
+    this.direccionesSalida.sort((a, b) => {
+      let result = 0;
+      if (a[this.sortField] < b[this.sortField]) {
+        result = -1;
+      } else if (a[this.sortField] > b[this.sortField]) {
+        result = 1;
+      }
+      return this.sortOrder * result;
+    });
+
+    this.updateMapPoints();
+  }
+
+  updateMapPoints() {
+    this.clearExistingPoints();
+
+    this.addPointsToMapAddresFounded(this.direccionesSalida);
   }
 
   addPointerMoveInteraction() {
@@ -317,6 +345,12 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   addPointsToMapAddresFounded(addresses: any[]) {
     let validAddresses = 0;
 
+    // Reiniciar los contadores de leyenda
+    this.legendItems.forEach(item => {
+      item.count = 0;
+      item.percentage = 0;
+    });
+
     const features: Feature<Point>[] = addresses.reduce((acc: Feature<Point>[], address, index) => {
       if (address.coordx && address.coordy) {
         validAddresses++;
@@ -328,7 +362,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
 
         const legendItem = this.legendItems.find(item => item.georesultado === address.georesultado);
         if (legendItem) {
-          legendItem.count++;
+          legendItem.count++;  // Incrementar el contador aquí
           const style = new Style({
             image: new CircleStyle({
               radius: 15,
@@ -357,6 +391,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       return acc;
     }, []);
 
+    // Calcular porcentajes después de contar todas las direcciones
     this.legendItems.forEach(item => {
       item.percentage = (item.count / validAddresses) * 100;
     });

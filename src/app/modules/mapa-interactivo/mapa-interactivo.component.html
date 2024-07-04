@@ -5,17 +5,26 @@
     <p-tabView>
         <p-tabPanel header="Direcciones de salida ({{direccionesSalida.length}})">
             <p-table [value]="direccionesSalida" [paginator]="true" [rows]="3" [showCurrentPageReport]="true"
+                [sortField]="sortField" [sortOrder]="sortOrder" (onSort)="onSort($event)"
                 currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} entradas"
-                [rowsPerPageOptions]="[4,8,16]" styleClass="p-datatable-sm p-datatable-striped">
+                styleClass="p-datatable-sm p-datatable-striped">
                 <ng-template pTemplate="header">
                     <tr>
-                        <th>Nombre</th>
-                        <th>Dirección</th>
-                        <th>Contador</th>
+                        <th>Num</th>
+                        <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre"></p-sortIcon></th>
+                        <th pSortableColumn="calle">Dirección <p-sortIcon field="calle"></p-sortIcon></th>
+                        <th pSortableColumn="georesultado">Georesultado <p-sortIcon field="georesultado"></p-sortIcon>
+                        </th>
                     </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-point let-i="rowIndex">
                     <tr (click)="selectPoint(point, true)" class="point-item">
+                        <td>
+                            <span class="contador-badge"
+                                [style.background-color]="getColorForGeoresultado(point.georesultado)">
+                                {{ i + 1 }}
+                            </span>
+                        </td>
                         <td>{{point.nombre}}</td>
                         <td>
                             <small>
@@ -23,11 +32,8 @@
                                 {{point.municipio}}, {{point.estado}}
                             </small>
                         </td>
-                        <td>
-                            <span class="contador-badge"
-                                [style.background-color]="getColorForGeoresultado(point.georesultado)">
-                                {{ i + 1 }}
-                            </span>
+                        <td class="contador-badge"><span
+                                [style.background-color]="getColorForGeoresultado(point.georesultado)">{{point.georesultado}}</span>
                         </td>
                     </tr>
                 </ng-template>
@@ -37,7 +43,7 @@
         <p-tabPanel header="Direcciones no encontradas ({{direccionesNE.length}})">
             <p-table [value]="direccionesNE" [paginator]="true" [rows]="3" [showCurrentPageReport]="true"
                 currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} entradas"
-                [rowsPerPageOptions]="[8,16,24]" styleClass="p-datatable-sm p-datatable-striped">
+                styleClass="p-datatable-sm p-datatable-striped">
                 <ng-template pTemplate="header">
                     <tr>
                         <th>Nombre</th>

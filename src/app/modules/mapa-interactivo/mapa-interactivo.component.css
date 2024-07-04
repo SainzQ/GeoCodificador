@@ -15,7 +15,7 @@
 
 .info-panel {
     position: absolute;
-    top: 55px;
+    top: 130px;
     left: 10px;
     background-color: rgba(255, 255, 255, 0.95);
     padding: 20px;
@@ -25,10 +25,43 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    width: 410px;
-    max-width: 90%;
-    max-height: 90vh;
+    width: 600px;
+    max-width: 95%;
+    max-height: 100vh;
     overflow-y: auto;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-thead>tr>th,
+:host ::ng-deep .p-datatable .p-datatable-tbody>tr>td {
+    padding: 0.5rem 0.5rem;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody>tr>td {
+    font-size: 0.9em;
+}
+
+:host ::ng-deep .p-datatable {
+    width: 100%;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-thead>tr>th:nth-child(1),
+:host ::ng-deep .p-datatable .p-datatable-tbody>tr>td:nth-child(1) {
+    width: 20%;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-thead>tr>th:nth-child(2),
+:host ::ng-deep .p-datatable .p-datatable-tbody>tr>td:nth-child(2) {
+    width: 25%;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-thead>tr>th:nth-child(3),
+:host ::ng-deep .p-datatable .p-datatable-tbody>tr>td:nth-child(3) {
+    width: 50%;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-thead>tr>th:nth-child(4),
+:host ::ng-deep .p-datatable .p-datatable-tbody>tr>td:nth-child(4) {
+    width: 15%;
 }
 
 .panel-title {
@@ -65,6 +98,29 @@
 
 :host ::ng-deep .p-paginator {
     justify-content: center;
+    padding: 0.5rem 0;
+    background-color: transparent;
+    border: none;
+}
+
+:host ::ng-deep .p-paginator .p-paginator-pages .p-paginator-page {
+    min-width: 2rem;
+    height: 2rem;
+    margin: 0 0.1rem;
+    border-radius: 50%;
+}
+
+:host ::ng-deep .p-paginator .p-paginator-first,
+:host ::ng-deep .p-paginator .p-paginator-prev,
+:host ::ng-deep .p-paginator .p-paginator-next,
+:host ::ng-deep .p-paginator .p-paginator-last {
+    min-width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+}
+
+:host ::ng-deep .p-paginator .p-paginator-current {
+    margin: 0 1rem;
 }
 
 .contador-badge {
@@ -79,7 +135,7 @@
     top: 10px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.63);
     padding: 8px;
     border-radius: 8px;
     z-index: 1000;
