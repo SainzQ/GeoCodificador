@@ -1,0 +1,29 @@
+.status-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.red {
+  background-color: red;
+}
+
+.orange {
+  background-color: orange;
+}
+
+.green {
+  background-color: green;
+}
+
+/* CSS para la barra de progreso */
+.status-progress .p-progressbar-value {
+  height: 4px; /* Reducir la altura */
+  background-color: orange; /* Color de fondo de la barra de progreso */
+}
+
+.status-progress .p-progressbar-label {
+  font-size: 12px; /* Tamaño de la fuente del texto en la barra de progreso */
+}

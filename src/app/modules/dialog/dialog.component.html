@@ -1,0 +1,9 @@
+    <!-- Componente Cargar Archivo -->
+    <ng-container *ngIf="showCargarArchivo">
+      <app-cargar-archivo (onData)="handleData($event)"></app-cargar-archivo>
+    </ng-container>
+
+    <!-- Componente Seleccionar Datos -->
+    <ng-container *ngIf="!showCargarArchivo">
+      <app-seleccionar-datos (onFinish)="handleDataFinish($event)" [json]="jsonData" [str]="stringData"></app-seleccionar-datos>
+    </ng-container>

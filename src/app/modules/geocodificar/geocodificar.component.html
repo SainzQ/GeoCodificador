@@ -1,0 +1,23 @@
+<div class="geocodificar-dialog">
+  <p>A continuación, seleccione los valores opcionales que desee agregar a sus resultados de Geocodificación</p>
+
+  <div class="option-container" style="margin-top: 30px;">
+    <div class="option-item">
+      <p-inputSwitch [(ngModel)]="seleccionNse"></p-inputSwitch>
+      <p>NSE</p>
+    </div>
+    <div class="option-item">
+      <p-inputSwitch [(ngModel)]="seleccionAgeb"></p-inputSwitch>
+      <p>AGEB</p>
+    </div>
+    <div class="option-item">
+      <p-inputSwitch [(ngModel)]="seleccionEsquinas"></p-inputSwitch>
+      <p>Esquinas</p>
+    </div>
+  </div>
+
+  <div class="button-container">
+    <p-button size="small" class="container-exportar custom-button" label="Geocodificar" icon="pi pi-globe" severity="success"
+      (click)="onGeocodificar($event)"></p-button>
+  </div>
+</div>
