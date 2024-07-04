@@ -7,11 +7,15 @@ import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
 import { fromLonLat } from 'ol/proj';
-import { Style, Circle as CircleStyle, Fill, Stroke } from 'ol/style';
+import { Style, Circle as CircleStyle, Fill, Stroke, Text } from 'ol/style';
 import Overlay from 'ol/Overlay';
 import { FeatureProperties } from 'src/app/models/featureProperties.model';
 import { DireccionActualizacion } from 'src/app/models/address.model';
 import { MessageService } from 'primeng/api';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { ChartType, ChartData, ChartOptions, Chart } from 'chart.js';
+
+Chart.register(ChartDataLabels);
 
 @Component({
   selector: 'app-mapa-interactivo',
@@ -162,7 +166,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   }
 
   getDireccionesSalida() {
-    this.mapService.getAddress(32).subscribe(
+    this.mapService.getAddress(34).subscribe(
       (response: any) => {
         if (response.status === 200) {
           this.clearExistingPoints();
@@ -186,23 +190,42 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     this.chartOptions = {
       plugins: {
         legend: {
-          display: false
+          display: true,
+          position: 'bottom',
+          labels: {
+            usePointStyle: true,
+            padding: 20
+          }
         },
         tooltip: {
-          callbacks: {
-            label: (context: any) => {
-              const label = context.label || '';
-              const value = context.raw || 0;
-              const total = context.chart.data.datasets[0].data.reduce((a: number, b: number) => a + b, 0);
-              const percentage = ((value / total) * 100).toFixed(2);
-              return `${label}: ${value} (${percentage}%)`;
-            }
+          enabled: false
+        },
+        datalabels: {
+          color: '#ffffff',
+          anchor: 'center',
+          align: 'center',
+          formatter: (value: number, ctx: {
+            chart: { data: ChartData },
+            dataIndex: number,
+            dataset: { data: number[] }
+          }) => {
+            const dataset = ctx.dataset;
+            const total = dataset.data.reduce((acc: number, data: number) => acc + data, 0);
+            const percentage = (value / total) * 100;
+            const label = ctx.chart.data.labels?.[ctx.dataIndex] as string;
+
+            return percentage > 0.01 ? `${label}\n${percentage.toFixed(1)}%` : '';
+          },
+          font: {
+            weight: 'bold' as const,
+            size: 14
           }
         }
       },
       responsive: true,
-      maintainAspectRatio: false
-    };
+      maintainAspectRatio: false,
+      cutout: '40%'
+    } as ChartOptions<'pie'>;
   }
 
   updateChartData() {
@@ -210,11 +233,16 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       labels: this.legendItems.map(item => item.label),
       datasets: [{
         data: this.legendItems.map(item => item.count),
-        backgroundColor: this.legendItems.map(item => item.color),
-        borderColor: this.legendItems.map(item => item.border),
-        borderWidth: 1
+        backgroundColor: [
+          '#4CAF50', '#8BC34A', '#CDDC39',
+          '#2196F3', '#03A9F4', '#00BCD4',
+          '#FFC107', '#FF9800', '#FF5722',
+          '#000000', '#15F5BA'
+        ],
+        borderColor: '#ffffff',
+        borderWidth: 2
       }]
-    };
+    } as ChartData<'pie', number[], string>;
   }
 
   selectPoint(point: any, isDireccionSalida: boolean) {
@@ -266,15 +294,17 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
 
   createSelectedStyle(baseStyle: Style) {
     const baseImage = baseStyle.getImage() as CircleStyle;
+    const baseText = baseStyle.getText();
     return new Style({
       image: new CircleStyle({
-        radius: baseImage.getRadius() * 1.5,
+        radius: baseImage.getRadius() * 1.2,
         fill: baseImage.getFill() || undefined,
         stroke: new Stroke({
           color: 'yellow',
           width: 3
         })
-      })
+      }),
+      text: baseText || undefined
     });
   }
 
@@ -287,11 +317,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   addPointsToMapAddresFounded(addresses: any[]) {
     let validAddresses = 0;
 
-    this.legendItems.forEach(item => {
-      item.percentage = (item.count / validAddresses) * 100;
-    });
-
-    const features: Feature<Point>[] = addresses.reduce((acc: Feature<Point>[], address) => {
+    const features: Feature<Point>[] = addresses.reduce((acc: Feature<Point>[], address, index) => {
       if (address.coordx && address.coordy) {
         validAddresses++;
         const coords = fromLonLat([parseFloat(address.coordx), parseFloat(address.coordy)]);
@@ -305,12 +331,22 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
           legendItem.count++;
           const style = new Style({
             image: new CircleStyle({
-              radius: 4,
+              radius: 15,
               fill: new Fill({ color: legendItem.color }),
               stroke: new Stroke({
-                color: address.georesultado === 'ED' ? 'black' : 'white',
-                width: address.georesultado === 'ED' ? 2 : 1
+                color: 'white',
+                width: 2
               })
+            }),
+            text: new Text({
+              text: (index + 1).toString(),
+              fill: new Fill({ color: '#000000' }),
+              stroke: new Stroke({
+                color: '#ffffff',
+                width: 3
+              }),
+              font: 'bold 14px Arial',
+              offsetY: 1
             })
           });
           feature.setStyle(style);
@@ -401,24 +437,52 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   }
 
   filterByGeoresultado(georesultado: string) {
+    let visibleCount = 0;
     const features = this.vectorSource.getFeatures();
     features.forEach(feature => {
       const properties = feature.getProperties()['properties'];
       if (properties.georesultado === georesultado) {
-        feature.setStyle(feature.get('originalStyle'));
-        this.cerrarDialog();
+        visibleCount++;
+        const originalStyle = feature.get('originalStyle') as Style;
+        const newStyle = new Style({
+          image: originalStyle.getImage() || undefined,
+          text: new Text({
+            text: visibleCount.toString(),
+            fill: new Fill({ color: '#ffffff' }),
+            stroke: new Stroke({
+              color: '#000000',
+              width: 1
+            }),
+            font: '12px Arial'
+          })
+        });
+        feature.setStyle(newStyle);
       } else {
         feature.setStyle(new Style({}));
       }
     });
+    this.cerrarDialog();
   }
 
   showAllPoints() {
     const features = this.vectorSource.getFeatures();
-    features.forEach(feature => {
-      feature.setStyle(feature.get('originalStyle'));
-      this.cerrarDialog();
+    features.forEach((feature, index) => {
+      const originalStyle = feature.get('originalStyle') as Style;
+      const newStyle = new Style({
+        image: originalStyle.getImage() || undefined,
+        text: new Text({
+          text: (index + 1).toString(),
+          fill: new Fill({ color: '#ffffff' }),
+          stroke: new Stroke({
+            color: '#000000',
+            width: 1
+          }),
+          font: '12px Arial'
+        })
+      });
+      feature.setStyle(newStyle);
     });
+    this.cerrarDialog();
   }
 
   cerrarDialog() {
@@ -429,6 +493,11 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       this.displayDialog = false;
       this.cd.detectChanges();
     });
+  }
+
+  getColorForGeoresultado(georesultado: string): string {
+    const legendItem = this.legendItems.find(item => item.georesultado === georesultado);
+    return legendItem ? legendItem.color : '#F0F0F0';
   }
 
 }
