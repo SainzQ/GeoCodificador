@@ -6,7 +6,7 @@ import { OSM, Vector as VectorSource } from 'ol/source';
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
-import { fromLonLat } from 'ol/proj';
+import { fromLonLat, transform } from 'ol/proj';
 import { Style, Circle as CircleStyle, Fill, Stroke, Text } from 'ol/style';
 import Overlay from 'ol/Overlay';
 import { FeatureProperties } from 'src/app/models/featureProperties.model';
@@ -15,6 +15,7 @@ import { MessageService } from 'primeng/api';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { ChartType, ChartData, ChartOptions, Chart } from 'chart.js';
 import { Router } from '@angular/router';
+import { Geometry } from 'ol/geom';
 
 Chart.register(ChartDataLabels);
 
@@ -59,6 +60,11 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   selectedProject: any;
   public sortField: string = '';
   public sortOrder: number = 1;
+  public showNearbyPoints: boolean = false;
+  public currentZoom: number = 0;
+  public minZoomForNearby: number = 14;
+  private maxDistanceKm: number = 2;
+  private allFeatures: Feature<Geometry>[] = [];
 
   constructor(
     private mapService: InteractiveMapService,
@@ -72,7 +78,60 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     if (navigation?.extras.state) {
       this.selectedProject = navigation.extras.state['proyecto'];
     }
-   }
+  }
+
+  toggleNearbyPoints() {
+    if (this.showNearbyPoints) {
+      this.filterNearbyPoints();
+    } else {
+      this.showAllPoints();
+    }
+  }
+
+  private filterNearbyPoints() {
+    const center = this.map.getView().getCenter();
+    if (!center) return;
+
+    const centerLonLat = transform(center, 'EPSG:3857', 'EPSG:4326');
+
+    const nearbyFeatures = this.vectorSource.getFeatures().filter(feature => {
+      const geometry = feature.getGeometry();
+      if (!(geometry instanceof Point)) return false;
+
+      const coords = geometry.getCoordinates();
+      const featureLonLat = transform(coords, 'EPSG:3857', 'EPSG:4326');
+      const distance = this.getDistanceFromLatLonInKm(centerLonLat[1], centerLonLat[0], featureLonLat[1], featureLonLat[0]);
+      return distance <= this.maxDistanceKm;
+    });
+
+    this.vectorSource.clear();
+    this.vectorSource.addFeatures(nearbyFeatures);
+    this.updateTableWithVisibleFeatures();
+  }
+
+  private getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+    const R = 6371;
+    const dLat = this.deg2rad(lat2 - lat1);
+    const dLon = this.deg2rad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2)
+      ;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c;
+    return d;
+  }
+
+  private deg2rad(deg: number) {
+    return deg * (Math.PI / 180);
+  }
+
+  private updateTableWithVisibleFeatures() {
+    const visibleFeatures = this.vectorSource.getFeatures();
+    this.direccionesSalida = visibleFeatures.map(feature => feature.getProperties()['properties']);
+    this.cd.detectChanges();
+  }
 
   ngOnInit() {
     console.log('Proyecto seleccionado:', this.selectedProject.id_proyecto);
@@ -114,6 +173,14 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     this.map.addOverlay(this.overlay);
 
     this.map.on('click', (event) => this.handleMapClick(event));
+
+    this.map.getView().on('change:resolution', () => {
+      this.currentZoom = this.map.getView().getZoom() || 0;
+      if (this.currentZoom < this.minZoomForNearby) {
+        this.showNearbyPoints = false;
+        this.showAllPoints();
+      }
+    });
   }
 
   onSort(event: any) {
@@ -354,7 +421,6 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   addPointsToMapAddresFounded(addresses: any[]) {
     let validAddresses = 0;
 
-    // Reiniciar los contadores de leyenda
     this.legendItems.forEach(item => {
       item.count = 0;
       item.percentage = 0;
@@ -371,7 +437,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
 
         const legendItem = this.legendItems.find(item => item.georesultado === address.georesultado);
         if (legendItem) {
-          legendItem.count++;  // Incrementar el contador aquí
+          legendItem.count++;
           const style = new Style({
             image: new CircleStyle({
               radius: 15,
@@ -400,13 +466,13 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       return acc;
     }, []);
 
-    // Calcular porcentajes después de contar todas las direcciones
     this.legendItems.forEach(item => {
       item.percentage = (item.count / validAddresses) * 100;
     });
 
     console.log('Direcciones válidas procesadas:', validAddresses);
 
+    this.allFeatures = features;
     this.vectorSource.addFeatures(features);
 
     if (features.length > 0 && this.map && this.map.getView()) {
@@ -509,24 +575,9 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   }
 
   showAllPoints() {
-    const features = this.vectorSource.getFeatures();
-    features.forEach((feature, index) => {
-      const originalStyle = feature.get('originalStyle') as Style;
-      const newStyle = new Style({
-        image: originalStyle.getImage() || undefined,
-        text: new Text({
-          text: (index + 1).toString(),
-          fill: new Fill({ color: '#ffffff' }),
-          stroke: new Stroke({
-            color: '#000000',
-            width: 1
-          }),
-          font: '12px Arial'
-        })
-      });
-      feature.setStyle(newStyle);
-    });
-    this.cerrarDialog();
+    this.vectorSource.clear();
+    this.vectorSource.addFeatures(this.allFeatures);
+    this.updateTableWithVisibleFeatures();
   }
 
   cerrarDialog() {

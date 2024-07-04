@@ -1,6 +1,9 @@
 <div id="map" #map [style.cursor]="cursorStyle"></div>
 
 <div class="info-panel p-shadow-5">
+    <p-inputSwitch [(ngModel)]="showNearbyPoints" (onChange)="toggleNearbyPoints()"
+        [disabled]="currentZoom < minZoomForNearby"></p-inputSwitch>
+    <label>Mostrar puntos cercanos</label>
     <h2 class="panel-title">Tablero de GeoResultados</h2>
     <p-tabView>
         <p-tabPanel header="Direcciones de salida ({{direccionesSalida.length}})">
