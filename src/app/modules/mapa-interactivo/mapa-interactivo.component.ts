@@ -464,7 +464,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
               })
             }),
             text: new Text({
-              text: (index + 1).toString(),
+              text: address.num.toString(),
               fill: new Fill({ color: '#000000' }),
               stroke: new Stroke({
                 color: '#ffffff',
@@ -580,17 +580,15 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   }
 
   filterByGeoresultado(georesultado: string) {
-    let visibleCount = 0;
     const features = this.vectorSource.getFeatures();
     features.forEach(feature => {
       const properties = feature.getProperties()['properties'];
       if (properties.georesultado === georesultado) {
-        visibleCount++;
         const originalStyle = feature.get('originalStyle') as Style;
         const newStyle = new Style({
           image: originalStyle.getImage() || undefined,
           text: new Text({
-            text: visibleCount.toString(),
+            text: properties.num.toString(),
             fill: new Fill({ color: '#ffffff' }),
             stroke: new Stroke({
               color: '#000000',
@@ -609,12 +607,13 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
 
   showAllPoints() {
     const features = this.vectorSource.getFeatures();
-    features.forEach((feature, index) => {
+    features.forEach((feature) => {
+      const properties = feature.getProperties()['properties'];
       const originalStyle = feature.get('originalStyle') as Style;
       const newStyle = new Style({
         image: originalStyle.getImage() || undefined,
         text: new Text({
-          text: (index + 1).toString(),
+          text: properties.num.toString(),
           fill: new Fill({ color: '#ffffff' }),
           stroke: new Stroke({
             color: '#000000',

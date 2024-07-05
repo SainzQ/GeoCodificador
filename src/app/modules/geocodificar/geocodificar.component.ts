@@ -72,7 +72,6 @@ export class GeocodificarComponent implements OnChanges {
               window.location.reload();
             }, 2000);
             // console.log(response);
-
           },
           error => {
             this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo iniciar el proceso de Geocodificado, intentelo de nuevo mas tarde' });
