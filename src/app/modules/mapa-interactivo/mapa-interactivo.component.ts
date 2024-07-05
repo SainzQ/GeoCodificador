@@ -91,13 +91,11 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     console.log('Proyecto seleccionado:', this.selectedProject.id_proyecto);
     this.getDireccionesSalida();
     this.initializeChart();
-    // Remove the updateSwitchState() call from here
   }
 
   ngAfterViewInit() {
     this.initMap();
     this.addPointerMoveInteraction();
-    // Add this line to update the switch state after the map is initialized
     this.updateSwitchState();
   }
 
@@ -114,11 +112,9 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       style: (feature) => {
         const size = feature.get('features').length;
         if (size === 1) {
-          // Single point style
           const singleFeature = feature.get('features')[0];
           return this.createPointStyle(singleFeature);
         } else {
-          // Cluster style
           return new Style({
             image: new CircleStyle({
               radius: 10 + Math.min(size, 20),
@@ -189,7 +185,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
         })
       });
     }
-    return new Style(); // Default style if no matching legendItem
+    return new Style();
   }
 
   toggleTableroGeoresultados() {
@@ -300,7 +296,6 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     if (feature) {
       const features = feature.get('features');
       if (features && features.length > 1) {
-        // It's a cluster, zoom in
         const extent = boundingExtent(
           features
             .map((f: Feature<Point>) => {
@@ -315,7 +310,6 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
           console.error('Invalid extent calculated from cluster');
         }
       } else if (features && features.length === 1) {
-        // It's a single feature, show info
         this.showFeatureInfo(features[0]);
       } else {
         console.error('Unexpected feature structure', features);
@@ -363,7 +357,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
           console.log('Número de direcciones totales:', this.totalNumberOfAddresses);
           console.log('Número de direcciones encontradas:', this.numberOfAddresses);
           console.log('Número de direcciones no encontradas:', this.numberOfNotValidAddresses);
-          this.updateChartData(); // Llamada explícita aquí
+          this.updateChartData();
         }
       },
       error => console.error('Error fetching addresses:', error)
