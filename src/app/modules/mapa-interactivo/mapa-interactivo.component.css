@@ -13,11 +13,38 @@
     z-index: 0;
 }
 
+.side-panel {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1000;
+}
+
+.side-panel button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.info-panel {
+    left: 60px;
+    transition: all 0.3s ease;
+}
+
+.legend {
+    left: 60px;
+    transform: none;
+    transition: all 0.3s ease;
+}
+
 .info-panel {
     position: absolute;
     top: 130px;
     left: 10px;
-    background-color: rgba(255, 255, 255, 0.95);
+    background-color: rgba(255, 255, 255, 0.63);
     padding: 20px;
     border-radius: 12px;
     z-index: 1000;
@@ -256,4 +283,64 @@
 .editing-input {
     border-color: #FFA500 !important;
     border-width: 0.12rem;
+}
+
+.disabled-label {
+    color: #999;
+    cursor: not-allowed;
+}
+
+.switch-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    background-color: #f0f0f0;
+    border-radius: 20px;
+    padding: 5px 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.switch-wrapper {
+    margin-right: 10px;
+}
+
+:host ::ng-deep .p-inputswitch {
+    width: 3.5rem;
+    height: 1.75rem;
+}
+
+:host ::ng-deep .p-inputswitch .p-inputswitch-slider {
+    background-color: #e0e0e0;
+    border-radius: 30px;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+:host ::ng-deep .p-inputswitch.p-inputswitch-checked .p-inputswitch-slider {
+    background-color: #4CAF50;
+}
+
+:host ::ng-deep .p-inputswitch .p-inputswitch-slider:before {
+    background-color: #ffffff;
+    width: 1.5rem;
+    height: 1.5rem;
+    left: 0.125rem;
+    bottom: 0.125rem;
+    border-radius: 50%;
+    transition: 0.3s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+:host ::ng-deep .p-inputswitch.p-inputswitch-checked .p-inputswitch-slider:before {
+    transform: translateX(1.75rem);
+}
+
+.switch-container label {
+    font-size: 0.95rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.switch-container .disabled-label {
+    color: #999;
+    cursor: not-allowed;
 }

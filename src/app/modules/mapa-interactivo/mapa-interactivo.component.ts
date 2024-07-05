@@ -15,6 +15,8 @@ import { MessageService } from 'primeng/api';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { ChartType, ChartData, ChartOptions, Chart } from 'chart.js';
 import { Router } from '@angular/router';
+import { Geometry } from 'ol/geom';
+import { containsCoordinate } from 'ol/extent';
 
 Chart.register(ChartDataLabels);
 
@@ -44,6 +46,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     { georesultado: 'S4', color: '#4C3BCF', border: 'white', label: 'S4', count: 0, percentage: 0 },
     { georesultado: 'S5', color: '#3FA2F6', border: 'white', label: 'S5', count: 0, percentage: 0 },
     { georesultado: 'S6', color: '#A7E6FF', border: 'white', label: 'S6', count: 0, percentage: 0 },
+    { georesultado: 'S7', color: '#E90074', border: 'white', label: 'S7', count: 0, percentage: 0 },
     { georesultado: 'N1', color: '#FFDB00', border: 'white', label: 'N1', count: 0, percentage: 0 },
     { georesultado: 'C1', color: '#FF9A00', border: 'white', label: 'C1', count: 0, percentage: 0 },
     { georesultado: 'NG', color: 'red', border: 'white', label: 'NG', count: 0, percentage: 0 },
@@ -59,7 +62,14 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   selectedProject: any;
   public sortField: string = '';
   public sortOrder: number = 1;
-  
+  public mostrarPuntosCercanos: boolean = false;
+  private zoomUmbral: number = 10;
+  private allFeatures: Feature<Point>[] = [];
+  private visibleFeatures: Feature<Point>[] = [];
+  public switchDisabled: boolean = true;
+  showTableroGeoresultados: boolean = false;
+  showLeyendas: boolean = false;
+
 
   constructor(
     private mapService: InteractiveMapService,
@@ -73,12 +83,13 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     if (navigation?.extras.state) {
       this.selectedProject = navigation.extras.state['proyecto'];
     }
-   }
+  }
 
   ngOnInit() {
     console.log('Proyecto seleccionado:', this.selectedProject.id_proyecto);
     this.getDireccionesSalida();
     this.initializeChart();
+    this.updateSwitchState();
   }
 
   ngAfterViewInit() {
@@ -115,26 +126,30 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     this.map.addOverlay(this.overlay);
 
     this.map.on('click', (event) => this.handleMapClick(event));
-  }
 
-  onSort(event: any) {
-    this.sortField = event.field;
-    this.sortOrder = event.order;
-    this.sortDireccionesSalida();
-  }
-
-  sortDireccionesSalida() {
-    this.direccionesSalida.sort((a, b) => {
-      let result = 0;
-      if (a[this.sortField] < b[this.sortField]) {
-        result = -1;
-      } else if (a[this.sortField] > b[this.sortField]) {
-        result = 1;
+    this.map.on('moveend', () => {
+      this.updateSwitchState();
+      if (this.mostrarPuntosCercanos) {
+        this.actualizarPuntosCercanos();
       }
-      return this.sortOrder * result;
     });
+  }
 
-    this.updateMapPoints();
+  toggleTableroGeoresultados() {
+    this.showTableroGeoresultados = !this.showTableroGeoresultados;
+  }
+
+  toggleLeyendas() {
+    this.showLeyendas = !this.showLeyendas;
+  }
+
+  updateSwitchState() {
+    const currentZoom = this.map.getView().getZoom() || 0;
+    this.switchDisabled = currentZoom < this.zoomUmbral;
+    if (this.switchDisabled && this.mostrarPuntosCercanos) {
+      this.mostrarPuntosCercanos = false;
+      this.updateVisibleFeatures();
+    }
   }
 
   updateMapPoints() {
@@ -153,6 +168,68 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       this.cursorStyle = hit ? 'pointer' : 'default';
       this.map.getTargetElement().style.cursor = this.cursorStyle;
     });
+  }
+
+  togglePuntosCercanos() {
+    if (!this.switchDisabled) {
+      this.updateVisibleFeatures();
+    }
+  }
+
+  onSort(event: any) {
+    this.sortField = event.field;
+    this.sortOrder = event.order;
+    this.sortDireccionesSalida();
+  }
+
+  sortDireccionesSalida() {
+    this.direccionesSalida.sort((a, b) => {
+      let result = 0;
+      if (a[this.sortField] < b[this.sortField]) {
+        result = -1;
+      } else if (a[this.sortField] > b[this.sortField]) {
+        result = 1;
+      }
+      return this.sortOrder * result;
+    });
+  }
+
+  actualizarPuntosCercanos() {
+    const zoom = this.map.getView().getZoom();
+    if (zoom && zoom >= this.zoomUmbral) {
+      const extent = this.map.getView().calculateExtent(this.map.getSize());
+      this.visibleFeatures = this.allFeatures.filter(feature => {
+        const geometry = feature.getGeometry();
+        if (geometry instanceof Point) {
+          return containsCoordinate(extent, geometry.getCoordinates());
+        }
+        return false;
+      });
+      this.vectorSource.clear();
+      this.vectorSource.addFeatures(this.visibleFeatures);
+      this.updateTableData();
+    } else {
+      this.messageService.add({ severity: 'info', summary: 'Zoom insuficiente', detail: 'Acerca más el mapa para ver los puntos cercanos.' });
+    }
+  }
+
+  updateTableData() {
+    setTimeout(() => {
+      this.direccionesSalida = this.visibleFeatures.map(feature => feature.getProperties()['properties']);
+      this.cd.detectChanges();
+    }, 0);
+  }
+
+  filtrarPuntosValidos(puntos: Feature<Geometry>[]): Feature<Point>[] {
+    return puntos.filter((feature): feature is Feature<Point> => {
+      const geometry = feature.getGeometry();
+      return geometry instanceof Point;
+    });
+  }
+
+  mostrarPuntosEnPanel(puntos: Feature<Point>[]) {
+    this.direccionesSalida = puntos.map(feature => feature.getProperties()['properties']);
+    this.cd.detectChanges();
   }
 
   handleMapClick(event: any) {
@@ -217,11 +294,11 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
           console.log('Número de direcciones totales:', this.totalNumberOfAddresses);
           console.log('Número de direcciones encontradas:', this.numberOfAddresses);
           console.log('Número de direcciones no encontradas:', this.numberOfNotValidAddresses);
+          this.updateChartData(); // Llamada explícita aquí
         }
       },
       error => console.error('Error fetching addresses:', error)
     );
-    this.updateChartData();
   }
 
   initializeChart() {
@@ -267,6 +344,8 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   }
 
   updateChartData() {
+    console.log('Actualizando datos de la gráfica');
+    console.log('Datos de leyenda:', this.legendItems);
     this.chartData = {
       labels: this.legendItems.map(item => item.label),
       datasets: [{
@@ -274,13 +353,14 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
         backgroundColor: [
           '#4CAF50', '#8BC34A', '#CDDC39',
           '#2196F3', '#03A9F4', '#00BCD4',
-          '#FFC107', '#FF9800', '#FF5722',
+          '#E90074', '#FFC107', '#FF9800', '#FF5722',
           '#000000', '#15F5BA'
         ],
         borderColor: '#ffffff',
         borderWidth: 2
       }]
     } as ChartData<'pie', number[], string>;
+    console.log('Datos de la gráfica actualizados:', this.chartData);
   }
 
   selectPoint(point: any, isDireccionSalida: boolean) {
@@ -289,16 +369,14 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
         f.getProperties()['properties'].id_direccion_salida === point.id_direccion_salida
       );
 
-      if (feature) {
-        const geometry = feature.getGeometry();
-        if (geometry && geometry instanceof Point) {
-          this.map.getView().animate({
-            center: geometry.getCoordinates(),
-            zoom: 18,
-            duration: 1000
-          });
-          this.handleFeatureSelection(feature as Feature<Point>);
-        }
+      if (feature && feature.getGeometry() instanceof Point) {
+        const geometry = feature.getGeometry() as Point;
+        this.map.getView().animate({
+          center: geometry.getCoordinates(),
+          zoom: 18,
+          duration: 1000
+        });
+        this.handleFeatureSelection(feature as Feature<Point>);
       }
     } else {
       console.log('Dirección no encontrada:', point);
@@ -355,7 +433,6 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   addPointsToMapAddresFounded(addresses: any[]) {
     let validAddresses = 0;
 
-    // Reiniciar los contadores de leyenda
     this.legendItems.forEach(item => {
       item.count = 0;
       item.percentage = 0;
@@ -372,7 +449,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
 
         const legendItem = this.legendItems.find(item => item.georesultado === address.georesultado);
         if (legendItem) {
-          legendItem.count++;  // Incrementar el contador aquí
+          legendItem.count++;
           const style = new Style({
             image: new CircleStyle({
               radius: 15,
@@ -401,7 +478,6 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       return acc;
     }, []);
 
-    // Calcular porcentajes después de contar todas las direcciones
     this.legendItems.forEach(item => {
       item.percentage = (item.count / validAddresses) * 100;
     });
@@ -409,6 +485,12 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     console.log('Direcciones válidas procesadas:', validAddresses);
 
     this.vectorSource.addFeatures(features);
+
+    if (this.mostrarPuntosCercanos) {
+      this.actualizarPuntosCercanos();
+    } else {
+      this.direccionesSalida = addresses;
+    }
 
     if (features.length > 0 && this.map && this.map.getView()) {
       this.map.getView().fit(this.vectorSource.getExtent(), {
@@ -419,8 +501,19 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       console.error('Map or map view is not initialized');
     }
 
-    this.updateChartData();
-    this.cd.detectChanges();
+    this.allFeatures = features;
+    this.updateVisibleFeatures();
+  }
+
+  updateVisibleFeatures() {
+    if (this.mostrarPuntosCercanos) {
+      this.actualizarPuntosCercanos();
+    } else {
+      this.visibleFeatures = this.allFeatures;
+      this.vectorSource.clear();
+      this.vectorSource.addFeatures(this.visibleFeatures);
+    }
+    this.updateTableData();
   }
 
   editarInformacionSalida() {
@@ -469,6 +562,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
           this.inputDisabled = true;
           this.buttonDisabledSave = true;
           this.buttonDisabledEdit = false;
+          this.cerrarDialog();
           this.getDireccionesSalida();
           this.cd.detectChanges();
         });

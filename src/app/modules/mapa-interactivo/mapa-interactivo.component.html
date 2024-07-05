@@ -1,6 +1,21 @@
 <div id="map" #map [style.cursor]="cursorStyle"></div>
-
-<div class="info-panel p-shadow-5">
+<div class="side-panel">
+    <button pButton type="button" icon="pi pi-table" (click)="toggleTableroGeoresultados()"
+        [ngClass]="{'p-button-outlined': !showTableroGeoresultados}" pTooltip="Mostrar/Ocultar Tablero de Georesultados"
+        tooltipPosition="right">
+    </button>
+    <button pButton type="button" icon="pi pi-list" (click)="toggleLeyendas()"
+        [ngClass]="{'p-button-outlined': !showLeyendas}" pTooltip="Mostrar/Ocultar Leyendas" tooltipPosition="right">
+    </button>
+</div>
+<div class="info-panel" *ngIf="showTableroGeoresultados">
+    <div class="switch-container">
+        <div class="switch-wrapper">
+            <p-inputSwitch [(ngModel)]="mostrarPuntosCercanos" (onChange)="togglePuntosCercanos()"
+                [disabled]="switchDisabled"></p-inputSwitch>
+        </div>
+        <label [ngClass]="{'disabled-label': switchDisabled}">Mostrar puntos cercanos</label>
+    </div>
     <h2 class="panel-title">Tablero de GeoResultados</h2>
     <p-tabView>
         <p-tabPanel header="Direcciones de salida ({{direccionesSalida.length}})">
@@ -22,7 +37,7 @@
                         <td>
                             <span class="contador-badge"
                                 [style.background-color]="getColorForGeoresultado(point.georesultado)">
-                                {{ i + 1 }}
+                                {{ point.num }}
                             </span>
                         </td>
                         <td>{{point.nombre}}</td>
@@ -65,7 +80,7 @@
         </p-tabPanel>
     </p-tabView>
 </div>
-<div class="legend">
+<div class="legend" *ngIf="showLeyendas">
     <div class="legend-header">
         <div class="chart-icon">
             <i class="pi pi-chart-pie" (click)="op.toggle($event)"></i>
@@ -88,7 +103,7 @@
 </div>
 <p-overlayPanel #op>
     <ng-template pTemplate>
-        <div class="chart-container">
+        <div *ngIf="chartData && chartData.datasets && chartData.datasets[0].data.length > 0" class="chart-container">
             <p-chart type="pie" [data]="chartData" [options]="chartOptions"></p-chart>
         </div>
     </ng-template>

@@ -101,7 +101,7 @@ export class SeleccionarDatosComponent {
 
     const datosAEnviar = {
       nombre_proyecto: this.str,
-      id_usuario: 6,
+      id_usuario: 5,
       direcciones: nuevoJSON
     };
 
