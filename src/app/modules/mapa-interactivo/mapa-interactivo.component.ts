@@ -89,12 +89,14 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     console.log('Proyecto seleccionado:', this.selectedProject.id_proyecto);
     this.getDireccionesSalida();
     this.initializeChart();
-    this.updateSwitchState();
+    // Remove the updateSwitchState() call from here
   }
 
   ngAfterViewInit() {
     this.initMap();
     this.addPointerMoveInteraction();
+    // Add this line to update the switch state after the map is initialized
+    this.updateSwitchState();
   }
 
   initMap() {
@@ -144,11 +146,13 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   }
 
   updateSwitchState() {
-    const currentZoom = this.map.getView().getZoom() || 0;
-    this.switchDisabled = currentZoom < this.zoomUmbral;
-    if (this.switchDisabled && this.mostrarPuntosCercanos) {
-      this.mostrarPuntosCercanos = false;
-      this.updateVisibleFeatures();
+    if (this.map && this.map.getView()) {
+      const currentZoom = this.map.getView().getZoom() || 0;
+      this.switchDisabled = currentZoom < this.zoomUmbral;
+      if (this.switchDisabled && this.mostrarPuntosCercanos) {
+        this.mostrarPuntosCercanos = false;
+        this.updateVisibleFeatures();
+      }
     }
   }
 
