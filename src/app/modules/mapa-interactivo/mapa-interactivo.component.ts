@@ -2,7 +2,7 @@ import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, Inject, PLATFO
 import { InteractiveMapService } from '../../services/interactive-map.service';
 import Map from 'ol/Map';
 import View from 'ol/View';
-import { OSM, Vector as VectorSource } from 'ol/source';
+import { Cluster, OSM, Vector as VectorSource } from 'ol/source';
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
@@ -16,7 +16,8 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { ChartType, ChartData, ChartOptions, Chart } from 'chart.js';
 import { Router } from '@angular/router';
 import { Geometry } from 'ol/geom';
-import { containsCoordinate } from 'ol/extent';
+import { boundingExtent, containsCoordinate } from 'ol/extent';
+import { TableComponent } from '../table/components/table/table.component';
 
 Chart.register(ChartDataLabels);
 
@@ -29,6 +30,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   @ViewChild('map') mapElement!: ElementRef;
   public map!: Map;
   private vectorSource!: VectorSource;
+  private clusterSource!: Cluster;
   public numberOfAddresses: number = 0;
   public numberOfNotValidAddresses: number = 0;
   private overlay!: Overlay;
@@ -102,8 +104,33 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   initMap() {
     this.vectorSource = new VectorSource();
 
-    const vectorLayer = new VectorLayer({
+    this.clusterSource = new Cluster({
+      distance: 40,
       source: this.vectorSource
+    });
+
+    const vectorLayer = new VectorLayer({
+      source: this.clusterSource,
+      style: (feature) => {
+        const size = feature.get('features').length;
+        if (size === 1) {
+          // Single point style
+          const singleFeature = feature.get('features')[0];
+          return this.createPointStyle(singleFeature);
+        } else {
+          // Cluster style
+          return new Style({
+            image: new CircleStyle({
+              radius: 10 + Math.min(size, 20),
+              fill: new Fill({ color: 'rgba(255, 153, 0, 0.8)' })
+            }),
+            text: new Text({
+              text: size.toString(),
+              fill: new Fill({ color: '#fff' })
+            })
+          });
+        }
+      }
     });
 
     this.map = new Map({
@@ -116,7 +143,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       ],
       view: new View({
         center: [0, 0],
-        zoom: 1
+        zoom: 2
       })
     });
 
@@ -135,6 +162,34 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
         this.actualizarPuntosCercanos();
       }
     });
+  }
+
+  createPointStyle(feature: Feature<Point>) {
+    const properties = feature.getProperties()['properties'];
+    const legendItem = this.legendItems.find(item => item.georesultado === properties.georesultado);
+    if (legendItem) {
+      return new Style({
+        image: new CircleStyle({
+          radius: 8,
+          fill: new Fill({ color: legendItem.color }),
+          stroke: new Stroke({
+            color: 'white',
+            width: 2
+          })
+        }),
+        text: new Text({
+          text: properties.num.toString(),
+          fill: new Fill({ color: '#000000' }),
+          stroke: new Stroke({
+            color: '#ffffff',
+            width: 3
+          }),
+          font: 'bold 12px Arial',
+          offsetY: 1
+        })
+      });
+    }
+    return new Style(); // Default style if no matching legendItem
   }
 
   toggleTableroGeoresultados() {
@@ -213,7 +268,11 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       this.vectorSource.addFeatures(this.visibleFeatures);
       this.updateTableData();
     } else {
-      this.messageService.add({ severity: 'info', summary: 'Zoom insuficiente', detail: 'Acerca más el mapa para ver los puntos cercanos.' });
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Zoom insuficiente',
+        detail: 'Acerca más el mapa para ver los puntos cercanos.'
+      });
     }
   }
 
@@ -237,46 +296,52 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   }
 
   handleMapClick(event: any) {
-    const feature = this.map.forEachFeatureAtPixel(event.pixel, (feature) => feature as Feature<Point>);
-    const createSelectedStyle = (baseStyle: Style) => {
-      const baseImage = baseStyle.getImage() as CircleStyle;
-      return new Style({
-        image: new CircleStyle({
-          radius: baseImage.getRadius() * 1.5,
-          fill: baseImage.getFill() || undefined,
-          stroke: new Stroke({
-            color: 'yellow',
-            width: 3
-          })
-        })
-      });
-    };
-
-    if (this.previousSelectedFeature) {
-      this.previousSelectedFeature.setStyle(this.previousSelectedFeature.get('originalStyle'));
-    }
-
+    const feature = this.map.forEachFeatureAtPixel(event.pixel, (feature) => feature);
     if (feature) {
-      const geometry = feature.getGeometry();
-      if (geometry) {
-        const coordinates = geometry.getCoordinates();
-        this.selectedFeature = feature.getProperties()['properties'] as FeatureProperties;
-        console.log(this.selectedFeature);
-
-        const originalStyle = feature.getStyle() as Style;
-        feature.set('originalStyle', originalStyle);
-        feature.setStyle(createSelectedStyle(originalStyle));
-        this.previousSelectedFeature = feature;
-
-        this.displayDialog = true;
-        this.overlay.setPosition(coordinates);
+      const features = feature.get('features');
+      if (features && features.length > 1) {
+        // It's a cluster, zoom in
+        const extent = boundingExtent(
+          features
+            .map((f: Feature<Point>) => {
+              const geom = f.getGeometry();
+              return geom ? geom.getCoordinates() : undefined;
+            })
+            .filter((coord: number[] | undefined): coord is number[] => coord !== undefined)
+        );
+        if (extent && extent.length === 4) {
+          this.map.getView().fit(extent, { duration: 1000, padding: [50, 50, 50, 50] });
+        } else {
+          console.error('Invalid extent calculated from cluster');
+        }
+      } else if (features && features.length === 1) {
+        // It's a single feature, show info
+        this.showFeatureInfo(features[0]);
       } else {
-        console.warn('Feature found but geometry is undefined');
-        this.overlay.setPosition(undefined);
+        console.error('Unexpected feature structure', features);
       }
     } else {
       this.overlay.setPosition(undefined);
-      this.previousSelectedFeature = null;
+      this.selectedFeature = null;
+      this.displayDialog = false;
+    }
+  }
+
+  showFeatureInfo(feature: Feature<Point>) {
+    const geometry = feature.getGeometry();
+    if (geometry) {
+      const coordinates = geometry.getCoordinates();
+      this.selectedFeature = feature.getProperties()['properties'] as FeatureProperties;
+
+      this.displayDialog = true;
+      this.overlay.setPosition(coordinates);
+    } else {
+      console.error('Feature has no geometry', feature);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se puede mostrar información para este punto'
+      });
     }
   }
 
@@ -454,28 +519,6 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
         const legendItem = this.legendItems.find(item => item.georesultado === address.georesultado);
         if (legendItem) {
           legendItem.count++;
-          const style = new Style({
-            image: new CircleStyle({
-              radius: 15,
-              fill: new Fill({ color: legendItem.color }),
-              stroke: new Stroke({
-                color: 'white',
-                width: 2
-              })
-            }),
-            text: new Text({
-              text: address.num.toString(),
-              fill: new Fill({ color: '#000000' }),
-              stroke: new Stroke({
-                color: '#ffffff',
-                width: 3
-              }),
-              font: 'bold 14px Arial',
-              offsetY: 1
-            })
-          });
-          feature.setStyle(style);
-          feature.set('originalStyle', style);
           acc.push(feature);
         }
       }
@@ -490,19 +533,18 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
 
     this.vectorSource.addFeatures(features);
 
-    if (this.mostrarPuntosCercanos) {
-      this.actualizarPuntosCercanos();
-    } else {
-      this.direccionesSalida = addresses;
-    }
-
     if (features.length > 0 && this.map && this.map.getView()) {
-      this.map.getView().fit(this.vectorSource.getExtent(), {
-        padding: [50, 50, 50, 50],
-        duration: 1000
-      });
+      const extent = this.vectorSource.getExtent();
+      if (extent && extent.length === 4 && !extent.some(isNaN)) {
+        this.map.getView().fit(extent, {
+          padding: [50, 50, 50, 50],
+          duration: 1000
+        });
+      } else {
+        console.error('Invalid extent calculated from features');
+      }
     } else {
-      console.error('Map or map view is not initialized');
+      console.error('Map or map view is not initialized, or no valid features');
     }
 
     this.allFeatures = features;
