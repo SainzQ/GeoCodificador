@@ -11,7 +11,7 @@ import { Style, Circle as CircleStyle, Fill, Stroke, Text } from 'ol/style';
 import Overlay from 'ol/Overlay';
 import { FeatureProperties } from 'src/app/models/featureProperties.model';
 import { DireccionActualizacion } from 'src/app/models/address.model';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { ChartType, ChartData, ChartOptions, Chart } from 'chart.js';
 import { Router } from '@angular/router';
@@ -71,10 +71,13 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   public switchDisabled: boolean = true;
   showTableroGeoresultados: boolean = false;
   showLeyendas: boolean = false;
-
+  private vectorLayer!: VectorLayer<VectorSource<Feature<Geometry>>>;
+  private clusterLayer!: VectorLayer<Cluster>;
+  private currentGeoresultado: string = '';
 
   constructor(
     private mapService: InteractiveMapService,
+    private confirmationService: ConfirmationService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private ngZone: NgZone,
     private cd: ChangeDetectorRef,
@@ -107,26 +110,9 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       source: this.vectorSource
     });
 
-    const vectorLayer = new VectorLayer({
+    this.clusterLayer = new VectorLayer({
       source: this.clusterSource,
-      style: (feature) => {
-        const size = feature.get('features').length;
-        if (size === 1) {
-          const singleFeature = feature.get('features')[0];
-          return this.createPointStyle(singleFeature);
-        } else {
-          return new Style({
-            image: new CircleStyle({
-              radius: 10 + Math.min(size, 20),
-              fill: new Fill({ color: 'rgba(255, 153, 0, 0.8)' })
-            }),
-            text: new Text({
-              text: size.toString(),
-              fill: new Fill({ color: '#fff' })
-            })
-          });
-        }
-      }
+      style: (feature) => this.styleFunction(feature as Feature)
     });
 
     this.map = new Map({
@@ -135,7 +121,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
         new TileLayer({
           source: new OSM()
         }),
-        vectorLayer
+        this.clusterLayer
       ],
       view: new View({
         center: [0, 0],
@@ -160,8 +146,39 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     });
   }
 
-  createPointStyle(feature: Feature<Point>) {
-    const properties = feature.getProperties()['properties'];
+  styleFunction(feature: Feature) {
+    const features = feature.get('features') as Feature[];
+    const size = features.length;
+    if (size === 1) {
+      return this.createPointStyle(features[0]);
+    }
+
+    const visibleFeatures = features.filter(f =>
+      this.currentGeoresultado === '' ||
+      f.get('properties').georesultado === this.currentGeoresultado
+    );
+
+    if (visibleFeatures.length === 0) {
+      return new Style(undefined);
+    }
+
+    return new Style({
+      image: new CircleStyle({
+        radius: 10 + Math.min(visibleFeatures.length, 20),
+        fill: new Fill({ color: 'rgba(255, 153, 0, 0.8)' })
+      }),
+      text: new Text({
+        text: visibleFeatures.length.toString(),
+        fill: new Fill({ color: '#fff' })
+      })
+    });
+  }
+
+  createPointStyle(feature: Feature): Style {
+    const properties = feature.get('properties');
+    if (this.currentGeoresultado !== '' && properties.georesultado !== this.currentGeoresultado) {
+      return new Style(undefined);
+    }
     const legendItem = this.legendItems.find(item => item.georesultado === properties.georesultado);
     if (legendItem) {
       return new Style({
@@ -185,7 +202,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
         })
       });
     }
-    return new Style();
+    return new Style(undefined);
   }
 
   toggleTableroGeoresultados() {
@@ -493,7 +510,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     }
   }
 
-  addPointsToMapAddresFounded(addresses: any[]) {
+  async addPointsToMapAddresFounded(addresses: any[]) {
     let validAddresses = 0;
 
     this.legendItems.forEach(item => {
@@ -525,7 +542,12 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
 
     console.log('Direcciones válidas procesadas:', validAddresses);
 
-    this.vectorSource.addFeatures(features);
+    if (features.length > 500) {
+      const useCluster = await this.confirmClusterUse();
+      this.initializeLayer(features, useCluster);
+    } else {
+      this.initializeLayer(features, false);
+    }
 
     if (features.length > 0 && this.map && this.map.getView()) {
       const extent = this.vectorSource.getExtent();
@@ -543,6 +565,83 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
 
     this.allFeatures = features;
     this.updateVisibleFeatures();
+  }
+
+  initializeLayer(features: Feature<Point>[], useCluster: boolean) {
+    // Primero, eliminamos cualquier capa existente
+    if (this.clusterLayer) {
+      this.map.removeLayer(this.clusterLayer);
+    }
+    if (this.vectorLayer) {
+      this.map.removeLayer(this.vectorLayer);
+    }
+
+    this.vectorSource = new VectorSource({
+      features: features
+    });
+
+    if (useCluster) {
+      this.clusterSource = new Cluster({
+        distance: 40,
+        source: this.vectorSource
+      });
+      this.clusterLayer = new VectorLayer({
+        source: this.clusterSource,
+        style: (feature) => this.styleFunction(feature as Feature)
+      });
+      this.map.addLayer(this.clusterLayer);
+    } else {
+      this.vectorLayer = new VectorLayer({
+        source: this.vectorSource,
+        style: (feature) => this.createPointStyle(feature as Feature<Point>)
+      });
+      this.map.addLayer(this.vectorLayer);
+    }
+  }
+
+  async confirmClusterUse(): Promise<boolean> {
+    return new Promise<boolean>((resolve) => {
+      this.messageService.add({
+        key: 'clusterConfirm',
+        sticky: true,
+        severity: 'info',
+        summary: 'Recomendación',
+        detail: 'Se han detectado más de 500 puntos. Se recomienda usar clustering para mejorar el rendimiento. ¿Desea usar clustering?',
+        closable: false,
+        data: {
+          accept: () => {
+            this.messageService.clear('clusterConfirm');
+            resolve(true);
+          },
+          reject: () => {
+            this.messageService.clear('clusterConfirm');
+            resolve(false);
+          }
+        }
+      });
+    });
+  }
+
+  initializeClusterLayer(features: Feature<Point>[]) {
+    this.vectorSource.addFeatures(features);
+    this.clusterSource = new Cluster({
+      distance: 40,
+      source: this.vectorSource
+    });
+    this.clusterLayer = new VectorLayer({
+      source: this.clusterSource,
+      style: (feature) => this.styleFunction(feature as Feature)
+    });
+    this.map.addLayer(this.clusterLayer);
+  }
+
+  initializePointLayer(features: Feature<Point>[]) {
+    this.vectorSource.addFeatures(features);
+    this.vectorLayer = new VectorLayer({
+      source: this.vectorSource,
+      style: (feature) => this.createPointStyle(feature as Feature<Point>)
+    });
+    this.map.addLayer(this.vectorLayer);
   }
 
   updateVisibleFeatures() {
@@ -616,50 +715,27 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   }
 
   filterByGeoresultado(georesultado: string) {
-    const features = this.vectorSource.getFeatures();
-    features.forEach(feature => {
-      const properties = feature.getProperties()['properties'];
-      if (properties.georesultado === georesultado) {
-        const originalStyle = feature.get('originalStyle') as Style;
-        const newStyle = new Style({
-          image: originalStyle.getImage() || undefined,
-          text: new Text({
-            text: properties.num.toString(),
-            fill: new Fill({ color: '#ffffff' }),
-            stroke: new Stroke({
-              color: '#000000',
-              width: 1
-            }),
-            font: '12px Arial'
-          })
-        });
-        feature.setStyle(newStyle);
-      } else {
-        feature.setStyle(new Style({}));
-      }
-    });
+    this.currentGeoresultado = georesultado;
+    this.clusterSource.changed();
     this.cerrarDialog();
   }
 
-  showAllPoints() {
-    const features = this.vectorSource.getFeatures();
-    features.forEach((feature) => {
-      const properties = feature.getProperties()['properties'];
-      const originalStyle = feature.get('originalStyle') as Style;
-      const newStyle = new Style({
-        image: originalStyle.getImage() || undefined,
-        text: new Text({
-          text: properties.num.toString(),
-          fill: new Fill({ color: '#ffffff' }),
-          stroke: new Stroke({
-            color: '#000000',
-            width: 1
-          }),
-          font: '12px Arial'
-        })
-      });
-      feature.setStyle(newStyle);
+  createClusterStyle(size: number): Style {
+    return new Style({
+      image: new CircleStyle({
+        radius: 10 + Math.min(size, 20),
+        fill: new Fill({ color: 'rgba(255, 153, 0, 0.8)' })
+      }),
+      text: new Text({
+        text: size.toString(),
+        fill: new Fill({ color: '#fff' })
+      })
     });
+  }
+
+  showAllPoints() {
+    this.currentGeoresultado = '';
+    this.clusterSource.changed();
     this.cerrarDialog();
   }
 

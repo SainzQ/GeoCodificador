@@ -23,12 +23,12 @@ import { ChartModule } from 'primeng/chart';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 
 // For dynamic progressbar demo
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { TableComponent } from "./table/components/table/table.component";
 import { ColumnValuePipe } from './table/pipes/column-value.pipe';
 import { CargarArchivoComponent } from "./cargar-archivo/cargar-archivo.component";
-import {DialogComponent} from "./dialog/dialog.component"
-import {SeleccionarDatosComponent} from "./seleccionar-datos/seleccionar-datos.component";
+import { DialogComponent } from "./dialog/dialog.component"
+import { SeleccionarDatosComponent } from "./seleccionar-datos/seleccionar-datos.component";
 import { ProgressBarModule } from 'primeng/progressbar';
 import { TableModule as PrimeNgTableModule } from 'primeng/table';
 import { InputSwitchModule } from 'primeng/inputswitch';
@@ -86,7 +86,8 @@ import { MapaInteractivoComponent } from './mapa-interactivo/mapa-interactivo.co
     ],
     providers: [
         MessageService,
-        TableroService
+        TableroService,
+        ConfirmationService
     ]
 })
 export class TableModule { }
