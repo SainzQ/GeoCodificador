@@ -17,6 +17,8 @@ import { ChartData, ChartOptions, Chart } from 'chart.js';
 import { Router } from '@angular/router';
 import { Geometry } from 'ol/geom';
 import { boundingExtent, containsCoordinate } from 'ol/extent';
+import AnimatedCluster from 'ol-ext/layer/AnimatedCluster';
+import SelectCluster from 'ol-ext/interaction/SelectCluster';
 
 Chart.register(ChartDataLabels);
 
@@ -70,7 +72,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   showTableroGeoresultados: boolean = false;
   showLeyendas: boolean = false;
   private vectorLayer!: VectorLayer<VectorSource<Feature<Geometry>>>;
-  private clusterLayer!: VectorLayer<Cluster>;
+  private clusterLayer!: AnimatedCluster;
   private currentGeoresultado: string = '';
   public clusteringActive: boolean = true;
 
@@ -109,9 +111,10 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       source: this.vectorSource
     });
 
-    this.clusterLayer = new VectorLayer({
+    this.clusterLayer = new AnimatedCluster({
       source: this.clusterSource,
-      style: (feature) => this.styleFunction(feature as Feature)
+      style: (feature) => this.styleFunction(feature as Feature),
+      animationDuration: 700
     });
 
     this.map = new Map({
@@ -167,7 +170,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
         distance: 40,
         source: this.vectorSource
       });
-      this.clusterLayer = new VectorLayer({
+      this.clusterLayer = new AnimatedCluster({
         source: this.clusterSource,
         style: (feature) => this.styleFunction(feature as Feature)
       });
@@ -194,7 +197,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       distance: 40,
       source: this.vectorSource
     });
-    this.clusterLayer = new VectorLayer({
+    this.clusterLayer = new AnimatedCluster({
       source: this.clusterSource,
       style: (feature) => this.styleFunction(feature as Feature)
     });

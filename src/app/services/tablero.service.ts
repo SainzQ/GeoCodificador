@@ -7,7 +7,7 @@ import { JsonObject } from '../modules/seleccionar-datos/seleccionar-datos.compo
   providedIn: 'root'
 })
 export class TableroService {
-  private apiUrl = 'http://192.168.40.1:5985/GCSW/api/proyectos/traerProyecto/5';
+  private apiUrl = 'http://192.168.40.1:5985/GCSW/api/proyectos/traerProyecto/6';
 
   constructor(private http: HttpClient) {}
 
