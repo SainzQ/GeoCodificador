@@ -2,14 +2,14 @@
 <div class="side-panel">
     <button pButton type="button" icon="pi pi-table" (click)="toggleTableroGeoresultados()"
         [ngClass]="{'p-button-outlined': !showTableroGeoresultados}" pTooltip="Mostrar/Ocultar Tablero de Georesultados"
-        tooltipPosition="right">
+        tooltipPosition="bottom">
     </button>
     <button pButton type="button" icon="pi pi-list" (click)="toggleLeyendas()"
-        [ngClass]="{'p-button-outlined': !showLeyendas}" pTooltip="Mostrar/Ocultar Leyendas" tooltipPosition="right">
+        [ngClass]="{'p-button-outlined': !showLeyendas}" pTooltip="Mostrar/Ocultar Leyendas" tooltipPosition="bottom">
     </button>
     <button pButton type="button" icon="pi pi-sitemap" (click)="toggleClustering()"
         [ngClass]="{'p-button-outlined': !clusteringActive}" pTooltip="Activar/Desactivar Clustering"
-        tooltipPosition="right">
+        tooltipPosition="bottom">
     </button>
 </div>
 <div class="info-panel" *ngIf="showTableroGeoresultados">
