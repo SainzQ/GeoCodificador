@@ -39,6 +39,7 @@ import { TableroService } from "../services/tablero.service";
 import { RecargarComponenteDirective } from "../directives/recargar-componente.directive";
 import { GeocodificarComponent } from "./geocodificar/geocodificar.component";
 import { MapaInteractivoComponent } from './mapa-interactivo/mapa-interactivo.component';
+import { TooltipModule } from "primeng/tooltip";
 @NgModule({
     declarations: [
         TableComponent,
@@ -78,7 +79,8 @@ import { MapaInteractivoComponent } from './mapa-interactivo/mapa-interactivo.co
         InputSwitchModule,
         TabViewModule,
         ChartModule,
-        OverlayPanelModule
+        OverlayPanelModule,
+        TooltipModule
     ],
     exports: [
         TableComponent,

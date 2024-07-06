@@ -13,11 +13,10 @@ import { FeatureProperties } from 'src/app/models/featureProperties.model';
 import { DireccionActualizacion } from 'src/app/models/address.model';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import { ChartType, ChartData, ChartOptions, Chart } from 'chart.js';
+import { ChartData, ChartOptions, Chart } from 'chart.js';
 import { Router } from '@angular/router';
 import { Geometry } from 'ol/geom';
 import { boundingExtent, containsCoordinate } from 'ol/extent';
-import { TableComponent } from '../table/components/table/table.component';
 
 Chart.register(ChartDataLabels);
 
@@ -55,7 +54,6 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     { georesultado: 'SD', color: 'black', border: 'white', label: 'SD', count: 0, percentage: 0 },
     { georesultado: 'ED', color: '#15F5BA', border: 'black', label: 'ED', count: 0, percentage: 0 },
   ];
-  public allPoints: any[] = [];
   public direccionesSalida: any[] = [];
   public direccionesNE: any[] = [];
   public totalNumberOfAddresses: number = 0;
@@ -74,6 +72,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   private vectorLayer!: VectorLayer<VectorSource<Feature<Geometry>>>;
   private clusterLayer!: VectorLayer<Cluster>;
   private currentGeoresultado: string = '';
+  public clusteringActive: boolean = true;
 
   constructor(
     private mapService: InteractiveMapService,
@@ -146,32 +145,305 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     });
   }
 
-  styleFunction(feature: Feature) {
-    const features = feature.get('features') as Feature[];
-    const size = features.length;
-    if (size === 1) {
-      return this.createPointStyle(features[0]);
+  initializeLayer(features: Feature<Point>[], useCluster: boolean) {
+    if (this.clusterLayer) {
+      this.map.removeLayer(this.clusterLayer);
+    }
+    if (this.vectorLayer) {
+      this.map.removeLayer(this.vectorLayer);
+    }
+    if (features.length === 0) {
+      console.warn('No features to display. Setting default view.');
+      this.setDefaultView();
+      return;
     }
 
-    const visibleFeatures = features.filter(f =>
-      this.currentGeoresultado === '' ||
-      f.get('properties').georesultado === this.currentGeoresultado
-    );
-
-    if (visibleFeatures.length === 0) {
-      return new Style(undefined);
-    }
-
-    return new Style({
-      image: new CircleStyle({
-        radius: 10 + Math.min(visibleFeatures.length, 20),
-        fill: new Fill({ color: 'rgba(255, 153, 0, 0.8)' })
-      }),
-      text: new Text({
-        text: visibleFeatures.length.toString(),
-        fill: new Fill({ color: '#fff' })
-      })
+    this.vectorSource = new VectorSource({
+      features: features
     });
+
+    if (useCluster) {
+      this.clusterSource = new Cluster({
+        distance: 40,
+        source: this.vectorSource
+      });
+      this.clusterLayer = new VectorLayer({
+        source: this.clusterSource,
+        style: (feature) => this.styleFunction(feature as Feature)
+      });
+      this.map.addLayer(this.clusterLayer);
+    } else {
+      this.vectorLayer = new VectorLayer({
+        source: this.vectorSource,
+        style: (feature) => this.createPointStyle(feature as Feature<Point>)
+      });
+      this.map.addLayer(this.vectorLayer);
+    }
+  }
+
+  initializeClusterLayer(features: Feature<Point>[]) {
+    if (this.vectorLayer) {
+      this.map.removeLayer(this.vectorLayer);
+    }
+    if (this.clusterLayer) {
+      this.map.removeLayer(this.clusterLayer);
+    }
+
+    this.vectorSource = new VectorSource({ features: features });
+    this.clusterSource = new Cluster({
+      distance: 40,
+      source: this.vectorSource
+    });
+    this.clusterLayer = new VectorLayer({
+      source: this.clusterSource,
+      style: (feature) => this.styleFunction(feature as Feature)
+    });
+    this.map.addLayer(this.clusterLayer);
+  }
+
+  initializePointLayer(features: Feature<Point>[]) {
+    if (this.clusterLayer) {
+      this.map.removeLayer(this.clusterLayer);
+    }
+    if (this.vectorLayer) {
+      this.map.removeLayer(this.vectorLayer);
+    }
+
+    this.vectorSource = new VectorSource({ features: features });
+    this.vectorLayer = new VectorLayer({
+      source: this.vectorSource,
+      style: (feature) => this.createPointStyle(feature as Feature<Point>)
+    });
+    this.map.addLayer(this.vectorLayer);
+  }
+
+  handleMapClick(event: any) {
+    const feature = this.map.forEachFeatureAtPixel(event.pixel, (feature) => feature);
+    if (feature) {
+      const features = feature.get('features');
+      if (features && features.length > 1) {
+        const extent = boundingExtent(
+          features
+            .map((f: Feature<Point>) => {
+              const geom = f.getGeometry();
+              return geom ? geom.getCoordinates() : undefined;
+            })
+            .filter((coord: number[] | undefined): coord is number[] => coord !== undefined)
+        );
+        if (extent && extent.length === 4) {
+          this.map.getView().fit(extent, { duration: 1000, padding: [50, 50, 50, 50] });
+        } else {
+          console.error('Invalid extent calculated from cluster');
+        }
+      } else if (features && features.length === 1) {
+        this.showFeatureInfo(features[0]);
+      } else {
+        console.error('Unexpected feature structure', features);
+      }
+    } else {
+      this.overlay.setPosition(undefined);
+      this.selectedFeature = null;
+      this.displayDialog = false;
+    }
+  }
+
+  addPointerMoveInteraction() {
+    this.map.on('pointermove', (evt) => {
+      if (evt.dragging) {
+        return;
+      }
+      const pixel = this.map.getEventPixel(evt.originalEvent);
+      const hit = this.map.hasFeatureAtPixel(pixel);
+      this.cursorStyle = hit ? 'pointer' : 'default';
+      this.map.getTargetElement().style.cursor = this.cursorStyle;
+    });
+  }
+
+  getDireccionesSalida() {
+    this.mapService.getAddress(this.selectedProject.id_proyecto).subscribe(
+      (response: any) => {
+        if (response.status === 200) {
+          this.clearExistingPoints();
+          this.direccionesSalida = response.direcciones_salida;
+          this.direccionesNE = response.direcciones_ne;
+
+          if (this.direccionesSalida.length === 0 && this.direccionesNE.length === 0) {
+            console.warn('No addresses found. Setting default view.');
+            this.setDefaultView();
+          } else {
+            this.addPointsToMapAddresFounded(response.direcciones_salida);
+          }
+          this.numberOfAddresses = response.direcciones_salida.length;
+          this.numberOfNotValidAddresses = response.direcciones_ne.length;
+          this.totalNumberOfAddresses = response.direcciones_salida.length + response.direcciones_ne.length;
+          console.log('Número de direcciones totales:', this.totalNumberOfAddresses);
+          console.log('Número de direcciones encontradas:', this.numberOfAddresses);
+          console.log('Número de direcciones no encontradas:', this.numberOfNotValidAddresses);
+          this.updateChartData();
+        }
+      },
+      error => console.error('Error fetching addresses:', error)
+    );
+  }
+
+  async addPointsToMapAddresFounded(addresses: any[]) {
+    let validAddresses = 0;
+
+    this.legendItems.forEach(item => {
+      item.count = 0;
+      item.percentage = 0;
+    });
+
+    const features: Feature<Point>[] = addresses.reduce((acc: Feature<Point>[], address, index) => {
+      if (address.coordx && address.coordy && !isNaN(parseFloat(address.coordx)) && !isNaN(parseFloat(address.coordy))) {
+        validAddresses++;
+        const coords = fromLonLat([parseFloat(address.coordx), parseFloat(address.coordy)]);
+        const feature = new Feature<Point>({
+          geometry: new Point(coords),
+          properties: address
+        });
+
+        const legendItem = this.legendItems.find(item => item.georesultado === address.georesultado);
+        if (legendItem) {
+          legendItem.count++;
+          acc.push(feature);
+        }
+      } else {
+        console.warn('Invalid coordinates for address:', address);
+      }
+      return acc;
+    }, []);
+
+    this.legendItems.forEach(item => {
+      item.percentage = (item.count / validAddresses) * 100;
+    });
+
+    console.log('Direcciones válidas procesadas:', validAddresses);
+
+    this.updateLayer();
+
+    if (features.length > 0 && this.map && this.map.getView()) {
+      this.vectorSource.addFeatures(features);
+
+      const extent = this.vectorSource.getExtent();
+      if (extent && extent.some(coord => coord !== Infinity && coord !== -Infinity)) {
+        this.map.getView().fit(extent, {
+          padding: [50, 50, 50, 50],
+          duration: 1000
+        });
+      } else {
+        console.warn('Invalid or empty extent. Setting default view.');
+        this.setDefaultView();
+      }
+    } else {
+      console.warn('No valid features or map not initialized. Setting default view.');
+      this.setDefaultView();
+    }
+
+    this.initializeLayer(features, this.clusteringActive);
+    this.fitMapToFeatures();
+
+    this.allFeatures = features;
+    this.updateVisibleFeatures();
+  }
+
+  toggleTableroGeoresultados() {
+    this.showTableroGeoresultados = !this.showTableroGeoresultados;
+  }
+
+  toggleLeyendas() {
+    this.showLeyendas = !this.showLeyendas;
+  }
+
+  toggleClustering() {
+    this.clusteringActive = !this.clusteringActive;
+    this.updateLayer();
+  }
+
+  togglePuntosCercanos() {
+    if (!this.switchDisabled) {
+      this.updateVisibleFeatures();
+    }
+  }
+
+  updateSwitchState() {
+    if (this.map && this.map.getView()) {
+      const currentZoom = this.map.getView().getZoom() || 0;
+      this.switchDisabled = currentZoom < this.zoomUmbral;
+      if (this.switchDisabled && this.mostrarPuntosCercanos) {
+        this.mostrarPuntosCercanos = false;
+        this.updateVisibleFeatures();
+      }
+    }
+  }
+
+  updateChartData() {
+    console.log('Actualizando datos de la gráfica');
+    console.log('Datos de leyenda:', this.legendItems);
+    this.chartData = {
+      labels: this.legendItems.map(item => item.label),
+      datasets: [{
+        data: this.legendItems.map(item => item.count),
+        backgroundColor: [
+          '#4CAF50', '#8BC34A', '#CDDC39',
+          '#2196F3', '#03A9F4', '#00BCD4',
+          '#E90074', '#FFC107', '#FF9800', '#FF5722',
+          '#000000', '#15F5BA'
+        ],
+        borderColor: '#ffffff',
+        borderWidth: 2
+      }]
+    } as ChartData<'pie', number[], string>;
+    console.log('Datos de la gráfica actualizados:', this.chartData);
+  }
+
+  updateLayer() {
+    if (this.allFeatures.length === 0) {
+      console.warn('No features to display');
+      return;
+    }
+
+    if (this.clusteringActive) {
+      this.initializeClusterLayer(this.allFeatures);
+    } else {
+      this.initializePointLayer(this.allFeatures);
+    }
+  }
+
+  updateMapPoints() {
+    this.clearExistingPoints();
+
+    this.addPointsToMapAddresFounded(this.direccionesSalida);
+  }
+
+  actualizarPuntosCercanos() {
+    const zoom = this.map.getView().getZoom();
+    if (zoom && zoom >= this.zoomUmbral) {
+      const extent = this.map.getView().calculateExtent(this.map.getSize());
+      this.visibleFeatures = this.allFeatures.filter(feature => {
+        const geometry = feature.getGeometry();
+        if (geometry instanceof Point) {
+          return containsCoordinate(extent, geometry.getCoordinates());
+        }
+        return false;
+      });
+      this.vectorSource.clear();
+      this.vectorSource.addFeatures(this.visibleFeatures);
+      this.updateTableData();
+    } else {
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Zoom insuficiente',
+        detail: 'Acerca más el mapa para ver los puntos cercanos.'
+      });
+    }
+  }
+
+  updateTableData() {
+    setTimeout(() => {
+      this.direccionesSalida = this.visibleFeatures.map(feature => feature.getProperties()['properties']);
+      this.cd.detectChanges();
+    }, 0);
   }
 
   createPointStyle(feature: Feature): Style {
@@ -205,47 +477,32 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     return new Style(undefined);
   }
 
-  toggleTableroGeoresultados() {
-    this.showTableroGeoresultados = !this.showTableroGeoresultados;
-  }
-
-  toggleLeyendas() {
-    this.showLeyendas = !this.showLeyendas;
-  }
-
-  updateSwitchState() {
-    if (this.map && this.map.getView()) {
-      const currentZoom = this.map.getView().getZoom() || 0;
-      this.switchDisabled = currentZoom < this.zoomUmbral;
-      if (this.switchDisabled && this.mostrarPuntosCercanos) {
-        this.mostrarPuntosCercanos = false;
-        this.updateVisibleFeatures();
-      }
+  styleFunction(feature: Feature) {
+    const features = feature.get('features') as Feature[];
+    const size = features.length;
+    if (size === 1) {
+      return this.createPointStyle(features[0]);
     }
-  }
 
-  updateMapPoints() {
-    this.clearExistingPoints();
+    const visibleFeatures = features.filter(f =>
+      this.currentGeoresultado === '' ||
+      f.get('properties').georesultado === this.currentGeoresultado
+    );
 
-    this.addPointsToMapAddresFounded(this.direccionesSalida);
-  }
+    if (visibleFeatures.length === 0) {
+      return new Style(undefined);
+    }
 
-  addPointerMoveInteraction() {
-    this.map.on('pointermove', (evt) => {
-      if (evt.dragging) {
-        return;
-      }
-      const pixel = this.map.getEventPixel(evt.originalEvent);
-      const hit = this.map.hasFeatureAtPixel(pixel);
-      this.cursorStyle = hit ? 'pointer' : 'default';
-      this.map.getTargetElement().style.cursor = this.cursorStyle;
+    return new Style({
+      image: new CircleStyle({
+        radius: 10 + Math.min(visibleFeatures.length, 20),
+        fill: new Fill({ color: 'rgba(255, 153, 0, 0.8)' })
+      }),
+      text: new Text({
+        text: visibleFeatures.length.toString(),
+        fill: new Fill({ color: '#fff' })
+      })
     });
-  }
-
-  togglePuntosCercanos() {
-    if (!this.switchDisabled) {
-      this.updateVisibleFeatures();
-    }
   }
 
   onSort(event: any) {
@@ -266,36 +523,6 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     });
   }
 
-  actualizarPuntosCercanos() {
-    const zoom = this.map.getView().getZoom();
-    if (zoom && zoom >= this.zoomUmbral) {
-      const extent = this.map.getView().calculateExtent(this.map.getSize());
-      this.visibleFeatures = this.allFeatures.filter(feature => {
-        const geometry = feature.getGeometry();
-        if (geometry instanceof Point) {
-          return containsCoordinate(extent, geometry.getCoordinates());
-        }
-        return false;
-      });
-      this.vectorSource.clear();
-      this.vectorSource.addFeatures(this.visibleFeatures);
-      this.updateTableData();
-    } else {
-      this.messageService.add({
-        severity: 'info',
-        summary: 'Zoom insuficiente',
-        detail: 'Acerca más el mapa para ver los puntos cercanos.'
-      });
-    }
-  }
-
-  updateTableData() {
-    setTimeout(() => {
-      this.direccionesSalida = this.visibleFeatures.map(feature => feature.getProperties()['properties']);
-      this.cd.detectChanges();
-    }, 0);
-  }
-
   filtrarPuntosValidos(puntos: Feature<Geometry>[]): Feature<Point>[] {
     return puntos.filter((feature): feature is Feature<Point> => {
       const geometry = feature.getGeometry();
@@ -308,33 +535,19 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     this.cd.detectChanges();
   }
 
-  handleMapClick(event: any) {
-    const feature = this.map.forEachFeatureAtPixel(event.pixel, (feature) => feature);
-    if (feature) {
-      const features = feature.get('features');
-      if (features && features.length > 1) {
-        const extent = boundingExtent(
-          features
-            .map((f: Feature<Point>) => {
-              const geom = f.getGeometry();
-              return geom ? geom.getCoordinates() : undefined;
-            })
-            .filter((coord: number[] | undefined): coord is number[] => coord !== undefined)
-        );
-        if (extent && extent.length === 4) {
-          this.map.getView().fit(extent, { duration: 1000, padding: [50, 50, 50, 50] });
-        } else {
-          console.error('Invalid extent calculated from cluster');
-        }
-      } else if (features && features.length === 1) {
-        this.showFeatureInfo(features[0]);
+  private fitMapToFeatures() {
+    if (this.vectorSource && this.map && this.map.getView()) {
+      const extent = this.vectorSource.getExtent();
+      if (extent && extent.some(coord => coord !== Infinity && coord !== -Infinity)) {
+        this.map.getView().fit(extent, {
+          padding: [50, 50, 50, 50],
+          duration: 1000
+        });
       } else {
-        console.error('Unexpected feature structure', features);
+        this.setDefaultView();
       }
     } else {
-      this.overlay.setPosition(undefined);
-      this.selectedFeature = null;
-      this.displayDialog = false;
+      this.setDefaultView();
     }
   }
 
@@ -358,27 +571,6 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
 
   onDialogHide() {
     this.selectedFeature = null;
-  }
-
-  getDireccionesSalida() {
-    this.mapService.getAddress(this.selectedProject.id_proyecto).subscribe(
-      (response: any) => {
-        if (response.status === 200) {
-          this.clearExistingPoints();
-          this.direccionesSalida = response.direcciones_salida;
-          this.direccionesNE = response.direcciones_ne;
-          this.addPointsToMapAddresFounded(response.direcciones_salida);
-          this.numberOfAddresses = response.direcciones_salida.length;
-          this.numberOfNotValidAddresses = response.direcciones_ne.length;
-          this.totalNumberOfAddresses = response.direcciones_salida.length + response.direcciones_ne.length;
-          console.log('Número de direcciones totales:', this.totalNumberOfAddresses);
-          console.log('Número de direcciones encontradas:', this.numberOfAddresses);
-          console.log('Número de direcciones no encontradas:', this.numberOfNotValidAddresses);
-          this.updateChartData();
-        }
-      },
-      error => console.error('Error fetching addresses:', error)
-    );
   }
 
   initializeChart() {
@@ -421,26 +613,6 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       maintainAspectRatio: false,
       cutout: '40%'
     } as ChartOptions<'pie'>;
-  }
-
-  updateChartData() {
-    console.log('Actualizando datos de la gráfica');
-    console.log('Datos de leyenda:', this.legendItems);
-    this.chartData = {
-      labels: this.legendItems.map(item => item.label),
-      datasets: [{
-        data: this.legendItems.map(item => item.count),
-        backgroundColor: [
-          '#4CAF50', '#8BC34A', '#CDDC39',
-          '#2196F3', '#03A9F4', '#00BCD4',
-          '#E90074', '#FFC107', '#FF9800', '#FF5722',
-          '#000000', '#15F5BA'
-        ],
-        borderColor: '#ffffff',
-        borderWidth: 2
-      }]
-    } as ChartData<'pie', number[], string>;
-    console.log('Datos de la gráfica actualizados:', this.chartData);
   }
 
   selectPoint(point: any, isDireccionSalida: boolean) {
@@ -510,138 +682,12 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     }
   }
 
-  async addPointsToMapAddresFounded(addresses: any[]) {
-    let validAddresses = 0;
 
-    this.legendItems.forEach(item => {
-      item.count = 0;
-      item.percentage = 0;
-    });
-
-    const features: Feature<Point>[] = addresses.reduce((acc: Feature<Point>[], address, index) => {
-      if (address.coordx && address.coordy) {
-        validAddresses++;
-        const coords = fromLonLat([parseFloat(address.coordx), parseFloat(address.coordy)]);
-        const feature = new Feature<Point>({
-          geometry: new Point(coords),
-          properties: address
-        });
-
-        const legendItem = this.legendItems.find(item => item.georesultado === address.georesultado);
-        if (legendItem) {
-          legendItem.count++;
-          acc.push(feature);
-        }
-      }
-      return acc;
-    }, []);
-
-    this.legendItems.forEach(item => {
-      item.percentage = (item.count / validAddresses) * 100;
-    });
-
-    console.log('Direcciones válidas procesadas:', validAddresses);
-
-    if (features.length > 500) {
-      const useCluster = await this.confirmClusterUse();
-      this.initializeLayer(features, useCluster);
-    } else {
-      this.initializeLayer(features, false);
+  setDefaultView() {
+    if (this.map && this.map.getView()) {
+      this.map.getView().setCenter([0, 0]);
+      this.map.getView().setZoom(2);
     }
-
-    if (features.length > 0 && this.map && this.map.getView()) {
-      const extent = this.vectorSource.getExtent();
-      if (extent && extent.length === 4 && !extent.some(isNaN)) {
-        this.map.getView().fit(extent, {
-          padding: [50, 50, 50, 50],
-          duration: 1000
-        });
-      } else {
-        console.error('Invalid extent calculated from features');
-      }
-    } else {
-      console.error('Map or map view is not initialized, or no valid features');
-    }
-
-    this.allFeatures = features;
-    this.updateVisibleFeatures();
-  }
-
-  initializeLayer(features: Feature<Point>[], useCluster: boolean) {
-    // Primero, eliminamos cualquier capa existente
-    if (this.clusterLayer) {
-      this.map.removeLayer(this.clusterLayer);
-    }
-    if (this.vectorLayer) {
-      this.map.removeLayer(this.vectorLayer);
-    }
-
-    this.vectorSource = new VectorSource({
-      features: features
-    });
-
-    if (useCluster) {
-      this.clusterSource = new Cluster({
-        distance: 40,
-        source: this.vectorSource
-      });
-      this.clusterLayer = new VectorLayer({
-        source: this.clusterSource,
-        style: (feature) => this.styleFunction(feature as Feature)
-      });
-      this.map.addLayer(this.clusterLayer);
-    } else {
-      this.vectorLayer = new VectorLayer({
-        source: this.vectorSource,
-        style: (feature) => this.createPointStyle(feature as Feature<Point>)
-      });
-      this.map.addLayer(this.vectorLayer);
-    }
-  }
-
-  async confirmClusterUse(): Promise<boolean> {
-    return new Promise<boolean>((resolve) => {
-      this.messageService.add({
-        key: 'clusterConfirm',
-        sticky: true,
-        severity: 'info',
-        summary: 'Recomendación',
-        detail: 'Se han detectado más de 500 puntos. Se recomienda usar clustering para mejorar el rendimiento. ¿Desea usar clustering?',
-        closable: false,
-        data: {
-          accept: () => {
-            this.messageService.clear('clusterConfirm');
-            resolve(true);
-          },
-          reject: () => {
-            this.messageService.clear('clusterConfirm');
-            resolve(false);
-          }
-        }
-      });
-    });
-  }
-
-  initializeClusterLayer(features: Feature<Point>[]) {
-    this.vectorSource.addFeatures(features);
-    this.clusterSource = new Cluster({
-      distance: 40,
-      source: this.vectorSource
-    });
-    this.clusterLayer = new VectorLayer({
-      source: this.clusterSource,
-      style: (feature) => this.styleFunction(feature as Feature)
-    });
-    this.map.addLayer(this.clusterLayer);
-  }
-
-  initializePointLayer(features: Feature<Point>[]) {
-    this.vectorSource.addFeatures(features);
-    this.vectorLayer = new VectorLayer({
-      source: this.vectorSource,
-      style: (feature) => this.createPointStyle(feature as Feature<Point>)
-    });
-    this.map.addLayer(this.vectorLayer);
   }
 
   updateVisibleFeatures() {
