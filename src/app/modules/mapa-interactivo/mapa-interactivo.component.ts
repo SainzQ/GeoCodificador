@@ -4,7 +4,7 @@ import Map from 'ol/Map';
 import View from 'ol/View';
 import { Cluster, OSM, Vector as VectorSource } from 'ol/source';
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
-import Feature from 'ol/Feature';
+import Feature, { FeatureLike } from 'ol/Feature';
 import Point from 'ol/geom/Point';
 import { fromLonLat } from 'ol/proj';
 import { Style, Circle as CircleStyle, Fill, Stroke, Text } from 'ol/style';
@@ -18,7 +18,8 @@ import { Router } from '@angular/router';
 import { Geometry } from 'ol/geom';
 import { boundingExtent, containsCoordinate } from 'ol/extent';
 import AnimatedCluster from 'ol-ext/layer/AnimatedCluster';
-import SelectCluster from 'ol-ext/interaction/SelectCluster';
+import { LineString, Polygon } from 'ol/geom';
+import { createEmpty, extend, getHeight, getWidth } from 'ol/extent';
 
 Chart.register(ChartDataLabels);
 
@@ -75,6 +76,11 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   private clusterLayer!: AnimatedCluster;
   private currentGeoresultado: string = '';
   public clusteringActive: boolean = true;
+  private circleDistanceMultiplier = 1;
+  private circleFootSeparation = 28;
+  private circleStartAngle = Math.PI / 2;
+  private clickFeature: FeatureLike | null = null;
+  private clickResolution: number | null = null;
 
   constructor(
     private mapService: InteractiveMapService,
@@ -106,8 +112,13 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   initMap() {
     this.vectorSource = new VectorSource();
 
+    this.vectorLayer = new VectorLayer({
+      source: this.vectorSource,
+      style: (feature) => this.createPointStyle(feature as Feature)
+    });
+
     this.clusterSource = new Cluster({
-      distance: 40,
+      distance: 80,
       source: this.vectorSource
     });
 
@@ -225,29 +236,60 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     if (feature) {
       const features = feature.get('features');
       if (features && features.length > 1) {
-        const extent = boundingExtent(
-          features
-            .map((f: Feature<Point>) => {
-              const geom = f.getGeometry();
-              return geom ? geom.getCoordinates() : undefined;
-            })
-            .filter((coord: number[] | undefined): coord is number[] => coord !== undefined)
-        );
-        if (extent && extent.length === 4) {
-          this.map.getView().fit(extent, { duration: 1000, padding: [50, 50, 50, 50] });
+        if (this.clickFeature === feature) {
+          // If already in spider mode, handle click on individual point
+          const clickedCoordinate = this.map.getCoordinateFromPixel(event.pixel);
+          const closestFeature = this.getClosestFeature(features, clickedCoordinate);
+          if (closestFeature) {
+            this.showFeatureInfo(closestFeature);
+          }
         } else {
-          console.error('Invalid extent calculated from cluster');
+          // Activate spider mode
+          const extent = createEmpty();
+          features.forEach((f: Feature<Geometry>) => {
+            const geom = f.getGeometry();
+            if (geom) extend(extent, geom.getExtent());
+          });
+
+          const view = this.map.getView();
+          const resolution = view.getResolution();
+          if (resolution && (view.getZoom() === view.getMaxZoom() ||
+            (getWidth(extent) < resolution && getHeight(extent) < resolution))) {
+            this.clickFeature = feature;
+            this.clickResolution = resolution;
+            this.clusterSource.changed();
+          } else {
+            view.fit(extent, { duration: 1000, padding: [50, 50, 50, 50] });
+          }
         }
       } else if (features && features.length === 1) {
         this.showFeatureInfo(features[0]);
-      } else {
-        console.error('Unexpected feature structure', features);
       }
     } else {
       this.overlay.setPosition(undefined);
       this.selectedFeature = null;
       this.displayDialog = false;
+      this.clickFeature = null;
+      this.clickResolution = null;
+      this.clusterSource.changed();
     }
+  }
+
+  getClosestFeature(features: Feature<Geometry>[], coordinate: number[]): Feature<Geometry> | null {
+    let closestFeature: Feature<Geometry> | null = null;
+    let minDistance = Infinity;
+    features.forEach((feature) => {
+      const geometry = feature.getGeometry();
+      if (geometry instanceof Point) {
+        const distance = geometry.getCoordinates().reduce((sum, val, index) =>
+          sum + Math.pow(val - coordinate[index], 2), 0);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestFeature = feature;
+        }
+      }
+    });
+    return closestFeature;
   }
 
   addPointerMoveInteraction() {
@@ -449,63 +491,124 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     }, 0);
   }
 
-  createPointStyle(feature: Feature): Style {
-    const properties = feature.get('properties');
-    if (this.currentGeoresultado !== '' && properties.georesultado !== this.currentGeoresultado) {
-      return new Style(undefined);
-    }
-    const legendItem = this.legendItems.find(item => item.georesultado === properties.georesultado);
-    if (legendItem) {
-      return new Style({
-        image: new CircleStyle({
-          radius: 8,
-          fill: new Fill({ color: legendItem.color }),
-          stroke: new Stroke({
-            color: 'white',
-            width: 2
-          })
-        }),
-        text: new Text({
-          text: properties.num.toString(),
-          fill: new Fill({ color: '#000000' }),
-          stroke: new Stroke({
-            color: '#ffffff',
-            width: 3
-          }),
-          font: 'bold 12px Arial',
-          offsetY: 1
+  createPointStyle(feature: Feature<Geometry>): Style {
+    const properties = feature.getProperties();
+    const georesultado = properties['properties'].georesultado;
+    const num = properties['properties'].num;
+
+    // Obtener el color basado en el georesultado
+    const color = this.getColorForGeoresultado(georesultado);
+
+    return new Style({
+      image: new CircleStyle({
+        radius: 10,
+        fill: new Fill({ color: color }),
+        stroke: new Stroke({
+          color: 'white',
+          width: 2
         })
-      });
-    }
-    return new Style(undefined);
+      }),
+      text: new Text({
+        text: num.toString(),
+        fill: new Fill({ color: '#ffffff' }),
+        stroke: new Stroke({
+          color: '#000000',
+          width: 3
+        }),
+        font: 'bold 12px Arial',
+        offsetY: 1
+      })
+    });
   }
 
-  styleFunction(feature: Feature) {
-    const features = feature.get('features') as Feature[];
+  // Función auxiliar para obtener el color basado en el georesultado
+  getColorForGeoresultado(georesultado: string): string {
+    const legendItem = this.legendItems.find(item => item.georesultado === georesultado);
+    return legendItem ? legendItem.color : '#F0F0F0'; // Color por defecto si no se encuentra
+  }
+
+  styleFunction(feature: FeatureLike) {
+    const features = feature.get('features');
+    if (!features) {
+      return this.createPointStyle(feature as Feature<Geometry>);
+    }
     const size = features.length;
     if (size === 1) {
       return this.createPointStyle(features[0]);
     }
 
-    const visibleFeatures = features.filter(f =>
-      this.currentGeoresultado === '' ||
-      f.get('properties').georesultado === this.currentGeoresultado
-    );
-
-    if (visibleFeatures.length === 0) {
-      return new Style(undefined);
+    if (feature === this.clickFeature && this.clickResolution) {
+      return this.createSpiderStyle(feature, this.clickResolution);
     }
 
-    return new Style({
-      image: new CircleStyle({
-        radius: 10 + Math.min(visibleFeatures.length, 20),
-        fill: new Fill({ color: 'rgba(255, 153, 0, 0.8)' })
-      }),
-      text: new Text({
-        text: visibleFeatures.length.toString(),
-        fill: new Fill({ color: '#fff' })
-      })
+    return this.createClusterStyle(size);
+  }
+
+  createSpiderStyle(cluster: FeatureLike, resolution: number): Style[] {
+    const styles: Style[] = [];
+    const features = cluster.get('features') as Feature<Geometry>[];
+    const geometry = cluster.getGeometry();
+    if (!(geometry instanceof Point)) {
+      return styles;
+    }
+    const center = geometry.getCoordinates();
+
+    const points = this.generatePointsCircle(features.length, center, resolution);
+
+    features.forEach((feature, i) => {
+      const point = new Point(points[i]);
+      const line = new LineString([center, points[i]]);
+
+      styles.push(new Style({
+        geometry: line,
+        stroke: new Stroke({
+          color: 'rgba(0, 0, 0, 0.5)',
+          width: 1
+        })
+      }));
+
+      const properties = feature.getProperties();
+      const georesultado = properties['properties'].georesultado;
+      console.log('Proerties:', properties)
+      const color = this.getColorForGeoresultado(georesultado);
+
+      styles.push(new Style({
+        geometry: point,
+        image: new CircleStyle({
+          radius: 8,
+          fill: new Fill({ color: color }),
+          stroke: new Stroke({ color: 'white', width: 2 })
+        }),
+        text: new Text({
+          text: properties['properties'].num != null ? properties['properties'].num.toString() : '',
+          fill: new Fill({ color: '#000000' }),
+          stroke: new Stroke({ color: '#ffffff', width: 3 }),
+          font: 'bold 12px Arial',
+          offsetY: 1
+        })
+      }));
     });
+
+    return styles;
+  }
+
+  generatePointsCircle(count: number, center: number[], resolution: number): number[][] {
+    const circumference = this.circleDistanceMultiplier * this.circleFootSeparation * (2 + count);
+    let legLength = circumference / (Math.PI * 2);
+    const angleStep = (Math.PI * 2) / count;
+
+    legLength = Math.max(legLength, 35) * resolution;
+
+    const points: number[][] = [];
+    for (let i = 0; i < count; i++) {
+      const angle = this.circleStartAngle + i * angleStep;
+      points.push([
+        center[0] + legLength * Math.cos(angle),
+        center[1] + legLength * Math.sin(angle)
+      ]);
+    }
+
+    return points;
   }
 
   onSort(event: any) {
@@ -554,16 +657,21 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     }
   }
 
-  showFeatureInfo(feature: Feature<Point>) {
+  showFeatureInfo(feature: Feature<Geometry>) {
     const geometry = feature.getGeometry();
-    if (geometry) {
+    if (geometry instanceof Point) {
       const coordinates = geometry.getCoordinates();
       this.selectedFeature = feature.getProperties()['properties'] as FeatureProperties;
 
       this.displayDialog = true;
       this.overlay.setPosition(coordinates);
+
+      // Reset button states
+      this.inputDisabled = true;
+      this.buttonDisabledSave = true;
+      this.buttonDisabledEdit = false;
     } else {
-      console.error('Feature has no geometry', feature);
+      console.error('Feature geometry is not a Point', feature);
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
@@ -797,10 +905,4 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       this.cd.detectChanges();
     });
   }
-
-  getColorForGeoresultado(georesultado: string): string {
-    const legendItem = this.legendItems.find(item => item.georesultado === georesultado);
-    return legendItem ? legendItem.color : '#F0F0F0';
-  }
-
 }
