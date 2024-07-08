@@ -802,13 +802,17 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   }
 
   updateVisibleFeatures() {
-    if (this.mostrarPuntosCercanos) {
+    if (this.currentGeoresultado) {
+      this.visibleFeatures = this.allFeatures.filter(feature =>
+        feature.getProperties()['properties'].georesultado === this.currentGeoresultado
+      );
+    } else if (this.mostrarPuntosCercanos) {
       this.actualizarPuntosCercanos();
     } else {
       this.visibleFeatures = this.allFeatures;
-      this.vectorSource.clear();
-      this.vectorSource.addFeatures(this.visibleFeatures);
     }
+    this.vectorSource.clear();
+    this.vectorSource.addFeatures(this.visibleFeatures);
     this.updateTableData();
   }
 
@@ -873,6 +877,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
 
   filterByGeoresultado(georesultado: string) {
     this.currentGeoresultado = georesultado;
+    this.updateVisibleFeatures();
     this.clusterSource.changed();
     this.cerrarDialog();
   }
@@ -892,6 +897,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
 
   showAllPoints() {
     this.currentGeoresultado = '';
+    this.updateVisibleFeatures();
     this.clusterSource.changed();
     this.cerrarDialog();
   }
