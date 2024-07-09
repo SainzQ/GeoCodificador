@@ -200,6 +200,12 @@
                         [ngClass]="{'editing-input': !inputDisabled}">
                 </div>
             </div>
+            <div class="p-col-12 p-md-6">
+                <div class="p-field">
+                    <label><b>Num</b></label>
+                    <input pInputText [(ngModel)]="selectedFeature.num" [disabled]="inputDisabled" [ngClass]="{'editing-input': !inputDisabled}">
+                </div>
+            </div>
         </div>
     </ng-container>
     <ng-template pTemplate="footer">

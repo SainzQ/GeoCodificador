@@ -25,4 +25,5 @@ export interface FeatureProperties {
     comentarios_dom?: string;
     referencias_dom?: string;
     id_proceso: number;
+    num:number;
   }

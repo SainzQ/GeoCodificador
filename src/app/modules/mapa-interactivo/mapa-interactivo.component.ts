@@ -1,3 +1,4 @@
+// Importaciones necesarias para el componente
 import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, Inject, PLATFORM_ID, NgZone, ChangeDetectorRef } from '@angular/core';
 import { InteractiveMapService } from '../../services/interactive-map.service';
 import Map from 'ol/Map';
@@ -16,10 +17,11 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { ChartData, ChartOptions, Chart } from 'chart.js';
 import { Router } from '@angular/router';
 import { Geometry } from 'ol/geom';
-import { boundingExtent, containsCoordinate } from 'ol/extent';
+import { containsCoordinate } from 'ol/extent';
 import AnimatedCluster from 'ol-ext/layer/AnimatedCluster';
-import { LineString, Polygon } from 'ol/geom';
+import { LineString } from 'ol/geom';
 import { createEmpty, extend, getHeight, getWidth } from 'ol/extent';
+import { MapBrowserEvent } from 'ol';
 
 Chart.register(ChartDataLabels);
 
@@ -29,6 +31,7 @@ Chart.register(ChartDataLabels);
   styleUrls: ['./mapa-interactivo.component.css']
 })
 export class MapaInteractivoComponent implements OnInit, AfterViewInit {
+  // Propiedades del componente
   @ViewChild('map') mapElement!: ElementRef;
   public map!: Map;
   private vectorSource!: VectorSource;
@@ -82,9 +85,9 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   private clickFeature: FeatureLike | null = null;
   private clickResolution: number | null = null;
 
+  // Constructor del componente
   constructor(
     private mapService: InteractiveMapService,
-    private confirmationService: ConfirmationService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private ngZone: NgZone,
     private cd: ChangeDetectorRef,
@@ -95,235 +98,336 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     if (navigation?.extras.state) {
       this.selectedProject = navigation.extras.state['proyecto'];
     }
+    // Inicialización del proyecto seleccionado
   }
 
+  // Método de inicialización del componente
   ngOnInit() {
+    // Inicialización de datos y configuración del gráfico
     console.log('Proyecto seleccionado:', this.selectedProject.id_proyecto);
     this.getDireccionesSalida();
     this.initializeChart();
   }
 
+  // Método que se ejecuta después de que la vista se ha inicializado
   ngAfterViewInit() {
+    // Inicialización del mapa y configuración de interacciones
     this.initMap();
     this.addPointerMoveInteraction();
     this.updateSwitchState();
   }
 
+  // Método para inicializar el mapa
   initMap() {
+    // Crear una fuente de datos vectorial para almacenar las características (puntos, líneas, polígonos)
     this.vectorSource = new VectorSource();
 
+    // Crear una capa vectorial que utilizará la fuente de datos anterior
     this.vectorLayer = new VectorLayer({
       source: this.vectorSource,
+      // Definir el estilo para cada característica en la capa
       style: (feature) => this.createPointStyle(feature as Feature)
     });
 
+    // Crear una fuente de clusters que agrupará las características cercanas
     this.clusterSource = new Cluster({
-      distance: 80,
-      source: this.vectorSource
+      distance: 80, // Distancia en píxeles para agrupar características
+      source: this.vectorSource // Utiliza la fuente vectorial creada anteriormente
     });
 
+    // Crear una capa de clusters animados
     this.clusterLayer = new AnimatedCluster({
       source: this.clusterSource,
+      // Definir el estilo para cada cluster
       style: (feature) => this.styleFunction(feature as Feature),
-      animationDuration: 700
+      animationDuration: 700 // Duración de la animación en milisegundos
     });
 
+    // Crear el objeto mapa principal
     this.map = new Map({
-      target: this.mapElement.nativeElement,
+      target: this.mapElement.nativeElement, // Elemento HTML donde se renderizará el mapa
       layers: [
+        // Capa base de teselas (tiles) usando OpenStreetMap
         new TileLayer({
           source: new OSM()
         }),
-        this.clusterLayer
+        this.clusterLayer // Añadir la capa de clusters al mapa
       ],
+      // Configurar la vista inicial del mapa
       view: new View({
-        center: [0, 0],
-        zoom: 2
+        center: [0, 0], // Centro del mapa (longitud, latitud)
+        zoom: 2 // Nivel de zoom inicial
       })
     });
 
+    // Crear un overlay (capa superpuesta) para mostrar información adicional
     this.overlay = new Overlay({
-      element: document.createElement('div'),
-      autoPan: true
+      element: document.createElement('div'), // Elemento HTML para el contenido del overlay
+      autoPan: true // El mapa se desplazará automáticamente para mantener visible el overlay
     });
 
+    // Añadir el overlay al mapa
     this.map.addOverlay(this.overlay);
 
+    // Configurar el manejador de eventos para clics en el mapa
     this.map.on('click', (event) => this.handleMapClick(event));
 
+    // Configurar el manejador de eventos para cuando termina un movimiento del mapa
     this.map.on('moveend', () => {
+      // Actualizar el estado de algún interruptor (switch) en la interfaz
       this.updateSwitchState();
+      // Si está activada la opción de mostrar puntos cercanos, actualizarlos
       if (this.mostrarPuntosCercanos) {
         this.actualizarPuntosCercanos();
       }
     });
   }
 
+  // Método para inicializar y actualizar capas del mapa
   initializeLayer(features: Feature<Point>[], useCluster: boolean) {
+    // Eliminar capas existentes si las hay
     if (this.clusterLayer) {
       this.map.removeLayer(this.clusterLayer);
     }
     if (this.vectorLayer) {
       this.map.removeLayer(this.vectorLayer);
     }
+
+    // Verificar si hay características para mostrar
     if (features.length === 0) {
       console.warn('No features to display. Setting default view.');
       this.setDefaultView();
       return;
     }
 
+    // Crear una nueva fuente de datos vectorial con las características proporcionadas
     this.vectorSource = new VectorSource({
       features: features
     });
 
     if (useCluster) {
+      // Configuración para usar clústeres
+      // Crear una fuente de clústeres
       this.clusterSource = new Cluster({
-        distance: 40,
+        distance: 40, // Distancia en píxeles para agrupar características
         source: this.vectorSource
       });
+
+      // Crear una capa de clústeres animados
       this.clusterLayer = new AnimatedCluster({
         source: this.clusterSource,
         style: (feature) => this.styleFunction(feature as Feature)
       });
+
+      // Añadir la capa de clústeres al mapa
       this.map.addLayer(this.clusterLayer);
     } else {
+      // Configuración para no usar clústeres (puntos individuales)
+      // Crear una capa vectorial normal
       this.vectorLayer = new VectorLayer({
         source: this.vectorSource,
         style: (feature) => this.createPointStyle(feature as Feature<Point>)
       });
+
+      // Añadir la capa vectorial al mapa
       this.map.addLayer(this.vectorLayer);
     }
   }
 
   initializeClusterLayer(features: Feature<Point>[]) {
+    // Si existe una capa vectorial previa, la eliminamos del mapa
     if (this.vectorLayer) {
       this.map.removeLayer(this.vectorLayer);
     }
+
+    // Si existe una capa de clústeres previa, la eliminamos del mapa
     if (this.clusterLayer) {
       this.map.removeLayer(this.clusterLayer);
     }
 
+    // Creamos una nueva fuente de vectores con las características proporcionadas
     this.vectorSource = new VectorSource({ features: features });
+
+    // Creamos una nueva fuente de clústeres basada en la fuente de vectores
     this.clusterSource = new Cluster({
-      distance: 40,
+      distance: 40, // Distancia máxima entre dos características para agruparlas en un clúster
       source: this.vectorSource
     });
+
+    // Creamos una nueva capa de clústeres animados
     this.clusterLayer = new AnimatedCluster({
-      source: this.clusterSource,
-      style: (feature) => this.styleFunction(feature as Feature)
+      source: this.clusterSource, // Usamos la fuente de clústeres que acabamos de crear
+      style: (feature) => this.styleFunction(feature as Feature) // Aplicamos una función de estilo personalizada a cada característica
     });
+
+    // Añadimos la nueva capa de clústeres al mapa
     this.map.addLayer(this.clusterLayer);
   }
 
   initializePointLayer(features: Feature<Point>[]) {
+    // Si existe una capa de clústeres previa, la eliminamos del mapa
     if (this.clusterLayer) {
       this.map.removeLayer(this.clusterLayer);
     }
+
+    // Si existe una capa vectorial previa, la eliminamos del mapa
     if (this.vectorLayer) {
       this.map.removeLayer(this.vectorLayer);
     }
 
+    // Creamos una nueva fuente de vectores con las características (puntos) proporcionadas
     this.vectorSource = new VectorSource({ features: features });
+
+    // Creamos una nueva capa vectorial
     this.vectorLayer = new VectorLayer({
-      source: this.vectorSource,
-      style: (feature) => this.createPointStyle(feature as Feature<Point>)
+      source: this.vectorSource, // Usamos la fuente de vectores que acabamos de crear
+      style: (feature) => this.createPointStyle(feature as Feature<Point>) // Aplicamos una función de estilo personalizada a cada punto
     });
+
+    // Añadimos la nueva capa vectorial al mapa
     this.map.addLayer(this.vectorLayer);
   }
 
-  handleMapClick(event: any) {
-    const feature = this.map.forEachFeatureAtPixel(event.pixel, (feature) => feature);
-    if (feature) {
-      const features = feature.get('features');
-      if (features && features.length > 1) {
-        if (this.clickFeature === feature) {
-          // If already in spider mode, handle click on individual point
-          const clickedCoordinate = this.map.getCoordinateFromPixel(event.pixel);
-          const closestFeature = this.getClosestFeature(features, clickedCoordinate);
+  // Método para manejar clics en el mapa
+  handleMapClick(event: MapBrowserEvent<UIEvent>) {
+    const pixel = event.pixel;
+    const featuresAtPixel = this.map.getFeaturesAtPixel(pixel, {
+      hitTolerance: 5,
+      layerFilter: (layer) => layer === this.clusterLayer || layer === this.vectorLayer
+    });
+
+    if (featuresAtPixel && featuresAtPixel.length > 0) {
+      let clickedFeature = featuresAtPixel[0] as Feature<Geometry>;
+
+      if (clickedFeature.get('features')) {
+        // Es un cluster
+        const clusterFeatures = clickedFeature.get('features') as Feature<Geometry>[];
+        if (this.clickFeature === clickedFeature) {
+          // Ya estamos en modo "spider", intentar seleccionar un punto
+          const clickedCoordinate = this.map.getCoordinateFromPixel(pixel);
+          const spiderPoints = clusterFeatures.map((f: Feature<Geometry>) => f.get('spiderCoordinate'));
+          const closestFeature = this.getClosestFeature(clusterFeatures, clickedCoordinate, spiderPoints);
           if (closestFeature) {
             this.showFeatureInfo(closestFeature);
           }
         } else {
-          // Activate spider mode
-          const extent = createEmpty();
-          features.forEach((f: Feature<Geometry>) => {
-            const geom = f.getGeometry();
-            if (geom) extend(extent, geom.getExtent());
-          });
-
-          const view = this.map.getView();
-          const resolution = view.getResolution();
-          if (resolution && (view.getZoom() === view.getMaxZoom() ||
-            (getWidth(extent) < resolution && getHeight(extent) < resolution))) {
-            this.clickFeature = feature;
-            this.clickResolution = resolution;
-            this.clusterSource.changed();
-          } else {
-            view.fit(extent, { duration: 1000, padding: [50, 50, 50, 50] });
-          }
+          // Activar el modo "spider"
+          this.handleClusterClick(clickedFeature, event);
         }
-      } else if (features && features.length === 1) {
-        this.showFeatureInfo(features[0]);
+      } else {
+        // Es una característica individual
+        this.showFeatureInfo(clickedFeature);
       }
     } else {
-      this.overlay.setPosition(undefined);
-      this.selectedFeature = null;
-      this.displayDialog = false;
-      this.clickFeature = null;
-      this.clickResolution = null;
-      this.clusterSource.changed();
+      // Clic fuera de cualquier característica
+      this.resetClickState();
     }
   }
 
-  getClosestFeature(features: Feature<Geometry>[], coordinate: number[]): Feature<Geometry> | null {
+  handleClusterClick(cluster: Feature<Geometry>, event: MapBrowserEvent<UIEvent>) {
+    const features = cluster.get('features') as Feature<Geometry>[];
+    if (features.length > 1) {
+      // Si hay más de una característica, aplicar el efecto spider
+      this.clickFeature = cluster;
+      this.clickResolution = this.map.getView().getResolution() || 1;
+      this.clusterSource.changed();
+
+      // Forzar una actualización del mapa
+      this.map.renderSync();
+    } else if (features.length === 1) {
+      // Si solo hay una característica, mostrar su información directamente
+      this.showFeatureInfo(features[0]);
+    }
+  }
+
+  resetClickState() {
+    console.log('Reseteando estado de clic');
+    this.overlay.setPosition(undefined);
+    this.selectedFeature = null;
+    this.displayDialog = false;
+    this.clickFeature = null;
+    this.clickResolution = null;
+    this.clusterSource.changed();
+    this.cd.detectChanges(); // Forzar la detección de cambios
+  }
+
+  getClosestFeature(features: Feature<Geometry>[], clickCoordinate: number[], spiderPoints: number[][]): Feature<Geometry> | null {
     let closestFeature: Feature<Geometry> | null = null;
     let minDistance = Infinity;
-    features.forEach((feature) => {
-      const geometry = feature.getGeometry();
-      if (geometry instanceof Point) {
-        const distance = geometry.getCoordinates().reduce((sum, val, index) =>
-          sum + Math.pow(val - coordinate[index], 2), 0);
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestFeature = feature;
-        }
+
+    features.forEach((feature, i) => {
+      const spiderCoordinate = spiderPoints[i];
+      const distance = this.getDistance(spiderCoordinate, clickCoordinate);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestFeature = feature;
       }
     });
+
     return closestFeature;
   }
 
+  getDistance(coord1: number[], coord2: number[]): number {
+    const dx = coord1[0] - coord2[0];
+    const dy = coord1[1] - coord2[1];
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
   addPointerMoveInteraction() {
+    // Añade un listener al evento 'pointermove' del mapa
     this.map.on('pointermove', (evt) => {
+      // Si el usuario está arrastrando el mapa, no hacemos nada
       if (evt.dragging) {
         return;
       }
+
+      // Obtiene las coordenadas del pixel donde ocurrió el evento
       const pixel = this.map.getEventPixel(evt.originalEvent);
+
+      // Verifica si hay alguna característica (feature) en esas coordenadas
       const hit = this.map.hasFeatureAtPixel(pixel);
+
+      // Cambia el estilo del cursor según si está sobre una característica o no
       this.cursorStyle = hit ? 'pointer' : 'default';
+
+      // Aplica el nuevo estilo de cursor al elemento del mapa
       this.map.getTargetElement().style.cursor = this.cursorStyle;
     });
   }
 
+  // Métodos para actualizar y gestionar datos del mapa
   getDireccionesSalida() {
+    // Llama al servicio del mapa para obtener las direcciones del proyecto seleccionado
     this.mapService.getAddress(this.selectedProject.id_proyecto).subscribe(
       (response: any) => {
         if (response.status === 200) {
+          // Limpia los puntos existentes en el mapa
           this.clearExistingPoints();
+
+          // Almacena las direcciones de salida y las direcciones no encontradas
           this.direccionesSalida = response.direcciones_salida;
           this.direccionesNE = response.direcciones_ne;
 
+          // Si no se encontraron direcciones, establece la vista predeterminada
           if (this.direccionesSalida.length === 0 && this.direccionesNE.length === 0) {
             console.warn('No addresses found. Setting default view.');
             this.setDefaultView();
           } else {
+            // Agrega los puntos de las direcciones encontradas al mapa
             this.addPointsToMapAddresFounded(response.direcciones_salida);
           }
+
+          // Actualiza los contadores de direcciones
           this.numberOfAddresses = response.direcciones_salida.length;
           this.numberOfNotValidAddresses = response.direcciones_ne.length;
           this.totalNumberOfAddresses = response.direcciones_salida.length + response.direcciones_ne.length;
+
+          // Registra la información en la consola
           console.log('Número de direcciones totales:', this.totalNumberOfAddresses);
           console.log('Número de direcciones encontradas:', this.numberOfAddresses);
           console.log('Número de direcciones no encontradas:', this.numberOfNotValidAddresses);
+
+          // Actualiza los datos del gráfico
           this.updateChartData();
         }
       },
@@ -334,20 +438,26 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   async addPointsToMapAddresFounded(addresses: any[]) {
     let validAddresses = 0;
 
+    // Reinicia los contadores de la leyenda
     this.legendItems.forEach(item => {
       item.count = 0;
       item.percentage = 0;
     });
 
+    // Crea las características (features) para cada dirección válida
     const features: Feature<Point>[] = addresses.reduce((acc: Feature<Point>[], address, index) => {
+      // Verifica si las coordenadas son válidas
       if (address.coordx && address.coordy && !isNaN(parseFloat(address.coordx)) && !isNaN(parseFloat(address.coordy))) {
         validAddresses++;
+        // Convierte las coordenadas de longitud/latitud a la proyección del mapa
         const coords = fromLonLat([parseFloat(address.coordx), parseFloat(address.coordy)]);
+        // Crea una nueva característica con la geometría y propiedades
         const feature = new Feature<Point>({
           geometry: new Point(coords),
           properties: address
         });
 
+        // Actualiza el contador de la leyenda correspondiente
         const legendItem = this.legendItems.find(item => item.georesultado === address.georesultado);
         if (legendItem) {
           legendItem.count++;
@@ -359,17 +469,21 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       return acc;
     }, []);
 
+    // Calcula los porcentajes para cada ítem de la leyenda
     this.legendItems.forEach(item => {
       item.percentage = (item.count / validAddresses) * 100;
     });
 
     console.log('Direcciones válidas procesadas:', validAddresses);
 
+    // Actualiza la capa del mapa
     this.updateLayer();
 
+    // Añade las características al mapa y ajusta la vista
     if (features.length > 0 && this.map && this.map.getView()) {
       this.vectorSource.addFeatures(features);
 
+      // Ajusta la vista del mapa para que se muestren todas las características
       const extent = this.vectorSource.getExtent();
       if (extent && extent.some(coord => coord !== Infinity && coord !== -Infinity)) {
         this.map.getView().fit(extent, {
@@ -385,9 +499,12 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       this.setDefaultView();
     }
 
+    // Inicializa la capa con las nuevas características
     this.initializeLayer(features, this.clusteringActive);
+    // Ajusta el mapa para mostrar todas las características
     this.fitMapToFeatures();
 
+    // Actualiza las características visibles
     this.allFeatures = features;
     this.updateVisibleFeatures();
   }
@@ -492,31 +609,35 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
   }
 
   createPointStyle(feature: Feature<Geometry>): Style {
+    // Extrae las propiedades relevantes de la característica
     const properties = feature.getProperties();
     const georesultado = properties['properties'].georesultado;
     const num = properties['properties'].num;
 
-    // Obtener el color basado en el georesultado
+    // Obtiene el color correspondiente al 'georesultado'
     const color = this.getColorForGeoresultado(georesultado);
 
+    // Crea y retorna un nuevo objeto Style
     return new Style({
+      // Define la imagen (en este caso, un círculo) para el punto
       image: new CircleStyle({
-        radius: 10,
-        fill: new Fill({ color: color }),
-        stroke: new Stroke({
+        radius: 10,  // Radio del círculo
+        fill: new Fill({ color: color }),  // Relleno del círculo con el color obtenido
+        stroke: new Stroke({  // Borde del círculo
           color: 'white',
           width: 2
         })
       }),
+      // Define el texto que se mostrará sobre el punto
       text: new Text({
-        text: num.toString(),
-        fill: new Fill({ color: '#ffffff' }),
-        stroke: new Stroke({
+        text: num.toString(),  // Convierte 'num' a string para usarlo como texto
+        fill: new Fill({ color: '#ffffff' }),  // Color del texto
+        stroke: new Stroke({  // Borde del texto para mejora de legibilidad
           color: '#000000',
           width: 3
         }),
-        font: 'bold 12px Arial',
-        offsetY: 1
+        font: 'bold 12px Arial',  // Estilo de fuente
+        offsetY: 1  // Pequeño desplazamiento vertical del texto
       })
     });
   }
@@ -527,10 +648,10 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     return legendItem ? legendItem.color : '#F0F0F0'; // Color por defecto si no se encuentra
   }
 
-  styleFunction(feature: FeatureLike) {
-    const features = feature.get('features');
+  styleFunction(feature: Feature<Geometry>): Style | Style[] {
+    const features = feature.get('features') as Feature<Geometry>[];
     if (!features) {
-      return this.createPointStyle(feature as Feature<Geometry>);
+      return this.createPointStyle(feature);
     }
     const size = features.length;
     if (size === 1) {
@@ -544,9 +665,11 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     return this.createClusterStyle(size);
   }
 
-  createSpiderStyle(cluster: FeatureLike, resolution: number): Style[] {
+  createSpiderStyle(cluster: Feature<Geometry>, resolution: number): Style[] {
     const styles: Style[] = [];
     const features = cluster.get('features') as Feature<Geometry>[];
+    console.log('Número de características en el cluster:', features.length);
+
     const geometry = cluster.getGeometry();
     if (!(geometry instanceof Point)) {
       return styles;
@@ -556,6 +679,8 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     const points = this.generatePointsCircle(features.length, center, resolution);
 
     features.forEach((feature, i) => {
+      console.log('Creando estilo para característica:', feature.getProperties()['properties']);
+      feature.set('spiderCoordinate', points[i], true); // El tercer parámetro true es para forzar el evento de cambio
       const point = new Point(points[i]);
       const line = new LineString([center, points[i]]);
 
@@ -657,21 +782,23 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     }
   }
 
-  showFeatureInfo(feature: Feature<Geometry>) {
-    const geometry = feature.getGeometry();
-    if (geometry instanceof Point) {
+  showFeatureInfo(feature: any) {
+    const geometry = feature.getGeometry?.() || feature.geometry;
+    if (geometry && geometry.getCoordinates) {
       const coordinates = geometry.getCoordinates();
-      this.selectedFeature = feature.getProperties()['properties'] as FeatureProperties;
+      this.selectedFeature = feature.getProperties?.()['properties'] || feature.properties;
 
       this.displayDialog = true;
       this.overlay.setPosition(coordinates);
 
-      // Reset button states
       this.inputDisabled = true;
       this.buttonDisabledSave = true;
       this.buttonDisabledEdit = false;
+
+      // Forzar la detección de cambios
+      this.cd.detectChanges();
     } else {
-      console.error('Feature geometry is not a Point', feature);
+      console.error('Feature geometry is invalid', feature);
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
@@ -728,20 +855,27 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
 
   selectPoint(point: any, isDireccionSalida: boolean) {
     if (isDireccionSalida) {
+      // Busca la característica (feature) correspondiente al punto en la fuente del vector
       const feature = this.vectorSource.getFeatures().find(f =>
         f.getProperties()['properties'].id_direccion_salida === point.id_direccion_salida
       );
 
+      // Verifica si se encontró la característica y si su geometría es un punto
       if (feature && feature.getGeometry() instanceof Point) {
         const geometry = feature.getGeometry() as Point;
+
+        // Anima la vista del mapa para centrarla en el punto seleccionado
         this.map.getView().animate({
           center: geometry.getCoordinates(),
           zoom: 18,
           duration: 1000
         });
+
+        // Maneja la selección de la característica
         this.handleFeatureSelection(feature as Feature<Point>);
       }
     } else {
+      // Si no es una dirección de salida válida, muestra un mensaje de información
       console.log('Dirección no encontrada:', point);
       this.messageService.add({
         severity: 'info',
@@ -753,7 +887,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
 
   handleFeatureSelection(feature: Feature<Point>) {
     if (this.previousSelectedFeature) {
-      this.previousSelectedFeature.setStyle(this.previousSelectedFeature.get('originalStyle'));
+      this.previousSelectedFeature.setStyle(this.previousSelectedFeature.get('originalStyle') || null);
     }
 
     const geometry = feature.getGeometry();
@@ -761,9 +895,9 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       const coordinates = geometry.getCoordinates();
       this.selectedFeature = feature.getProperties()['properties'] as FeatureProperties;
 
-      const originalStyle = feature.getStyle() as Style;
+      const originalStyle = feature.getStyle();
       feature.set('originalStyle', originalStyle);
-      feature.setStyle(this.createSelectedStyle(originalStyle));
+      feature.setStyle(this.createSelectedStyle(originalStyle as Style | null));
       this.previousSelectedFeature = feature;
 
       this.displayDialog = true;
@@ -771,13 +905,35 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
     }
   }
 
-  createSelectedStyle(baseStyle: Style) {
-    const baseImage = baseStyle.getImage() as CircleStyle;
+  createSelectedStyle(baseStyle: Style | null): Style {
+    if (!baseStyle) {
+      return new Style({
+        image: new CircleStyle({
+          radius: 12,
+          fill: new Fill({ color: 'yellow' }),
+          stroke: new Stroke({
+            color: 'black',
+            width: 2
+          })
+        })
+      });
+    }
+
+    const baseImage = baseStyle.getImage();
     const baseText = baseStyle.getText();
+
+    let fill: Fill | undefined;
+    let radius: number = 12;
+
+    if (baseImage instanceof CircleStyle) {
+      fill = baseImage.getFill() || undefined;
+      radius = baseImage.getRadius() * 1.2;
+    }
+
     return new Style({
       image: new CircleStyle({
-        radius: baseImage.getRadius() * 1.2,
-        fill: baseImage.getFill() || undefined,
+        radius: radius,
+        fill: fill || new Fill({ color: 'yellow' }),
         stroke: new Stroke({
           color: 'yellow',
           width: 3
@@ -786,6 +942,7 @@ export class MapaInteractivoComponent implements OnInit, AfterViewInit {
       text: baseText || undefined
     });
   }
+
 
   clearExistingPoints() {
     if (this.vectorSource) {
