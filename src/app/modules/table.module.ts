@@ -40,6 +40,7 @@ import { RecargarComponenteDirective } from "../directives/recargar-componente.d
 import { GeocodificarComponent } from "./geocodificar/geocodificar.component";
 import { MapaInteractivoComponent } from './mapa-interactivo/mapa-interactivo.component';
 import { TooltipModule } from "primeng/tooltip";
+import { SplitterModule } from 'primeng/splitter';
 @NgModule({
     declarations: [
         TableComponent,
@@ -80,7 +81,8 @@ import { TooltipModule } from "primeng/tooltip";
         TabViewModule,
         ChartModule,
         OverlayPanelModule,
-        TooltipModule
+        TooltipModule,
+        SplitterModule
     ],
     exports: [
         TableComponent,
