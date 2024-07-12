@@ -47,7 +47,7 @@ export class CustomerComponent implements OnInit {
   }
   loadCustomers() {
     this.isLoadingTable = true;
-    this.tableroService.getProyecto().subscribe(
+    this.tableroService.getProyectos().subscribe(
       response => {
         this.customersList = response.response.map((project: any) => ({
           ...project,

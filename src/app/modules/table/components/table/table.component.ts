@@ -215,10 +215,16 @@ export class TableComponent implements OnInit, AfterViewInit {
       accept: () => {
         this.tableroService.eliminarProyecto(proyectoId).subscribe(
           response => {
-            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Proyecto eliminado correctamente' });
             setTimeout(() => {
-              window.location.reload();
-            }, 2000);
+            this.reloadData();
+          }, 2000);
+            // this.selection.clear();
+            // this.selectedRowIndex = -1;
+            // this.selectedProject = null;
+            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Proyecto eliminado correctamente' });
+            // setTimeout(() => {
+            //   window.location.reload();
+            // }, 2000);
           },
           error => {
             this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el proyecto' });
@@ -229,6 +235,43 @@ export class TableComponent implements OnInit, AfterViewInit {
         this.messageService.add({ severity: 'info', summary: 'Cancelado', detail: 'No se ha eliminado el proyecto' });
       }
     });
+  }
+
+  reloadData() {
+    this.tableroService.getProyectos().subscribe(
+      (data: any) => {
+        this.setData(data);
+        this.updatePagedData();
+        this.resetSelection();
+      },
+      error => {
+        console.error('Error al cargar los proyectos:', error);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los proyectos' });
+        this.setData([]);
+        this.updatePagedData();
+      }
+    );
+  }
+
+  setData(data: any) {
+    if (Array.isArray(data)) {
+      this.originalData = data;
+      this.filteredData = data;
+    } else if (data && typeof data === 'object') {
+      const dataArray = Object.values(data).find(value => Array.isArray(value));
+      this.originalData = Array.isArray(dataArray) ? dataArray : [];
+      this.filteredData = Array.isArray(dataArray) ? dataArray : [];
+    } else {
+      console.error('Formato de datos inesperado:', data);
+      this.originalData = [];
+      this.filteredData = [];
+    }
+  }
+
+  resetSelection() {
+    this.selection.clear();
+    this.selectedRowIndex = -1;
+    this.selectedProject = null;
   }
 
   onExportar(event: Event) {

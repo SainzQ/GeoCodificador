@@ -11,7 +11,7 @@ export class TableroService {
 
   constructor(private http: HttpClient) {}
 
-  getProyecto(): Observable<any> {
+  getProyectos(): Observable<any> {
     return this.http.get<any>(this.apiUrl);
   }
 

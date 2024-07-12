@@ -23,11 +23,11 @@ export class TableCustomersComponent implements OnInit {
         throw new Error('Method not implement.');
     }
     ngOnInit(): void {
-        this.getProyecto();
+        this.getProyectos();
       }
-      
-      getProyecto(): void {
-        this.tableroService.getProyecto()
+
+      getProyectos(): void {
+        this.tableroService.getProyectos()
           .subscribe(
             response => {
               this.dataSource = response.response; // Assign the array of projects
@@ -37,5 +37,5 @@ export class TableCustomersComponent implements OnInit {
             }
           );
       }
-      
-    }      
+
+    }
